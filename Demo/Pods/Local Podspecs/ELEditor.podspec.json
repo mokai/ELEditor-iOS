@@ -1,0 +1,38 @@
+{
+  "name": "ELEditor",
+  "version": "0.1",
+  "summary": "Enclave Editor",
+  "homepage": "https://www.enclavebooks.cn",
+  "license": {
+    "type": "MIT",
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "kk": "kk@enclavelit.com"
+  },
+  "source": {
+    "git": "https://github.com/mokai/ELEditor.git",
+    "tag": "0.1"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "Classes",
+  "resources": [
+    "Assets/*.png",
+    "Assets/*.html",
+    "Assets/*.js",
+    "Assets/*.svg",
+    "Assets/*.css",
+    "Assets/*.storyboard",
+    "Assets/*.xib"
+  ],
+  "exclude_files": "Classes/exclude",
+  "requires_arc": true,
+  "frameworks": "UIKit",
+  "dependencies": {
+    "SnapKit": [
+      "~> 4.0.0"
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+* {
+    outline: 0 solid transparent;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-touch-callout: none;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+html, body {
+    margin:0;
+    padding:0;
+    font-family: sans-serif;
+}
+
+body {
+    overflow: hidden;
+    overflow-y: auto;
+}
+
+/*#MARK: - 头图*/
+#cover {
+    -webkit-user-select: none;
+    margin: 0.3rem 0.4rem 0rem 0.4rem;
+    height: 1.6rem;
+    overflow: hidden;
+    border-radius: 0.1rem;
+    background-color: #F3F3F3;
+}
+
+#cover div {
+    height: 1.6rem;
+    position: absolute;
+    background:url('cover_icon.png') no-repeat center;
+}
+
+#cover img {
+    display: block;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 3.86rem;
+}
+
+/*#MARK: - 输入框*/
+.field {
+    color: #404146;
+}
+
+.placeholder:before {
+    position: absolute;
+    content: attr(placeholder);
+    color: #8B8687;
+}
+
+/*#MARK: - 标题*/
+#title {
+    font-size: 0.4rem;
+    line-height: 0.56rem;
+    margin: 0.3rem 0.4rem 0.3rem 0.4rem;
+}
+
+/*#MARK: - 分隔线*/
+#separator {
+    -webkit-user-select: none;
+    margin: 0rem 0.4rem 0rem 0.4rem;
+    height: 0.5px;
+    background-color: #C8C7CC;
+}
+
+/*#MARK: - 内容区*/
+#content {
+    margin: 0.3rem 0.4rem 0rem 0.4rem;
+    font-size: 0.32rem;
+    line-height: 0.4rem;
+}
+
+#content p{
+    margin-top: 0.6rem;
+    text-align:justify;
+}

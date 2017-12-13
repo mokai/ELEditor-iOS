@@ -1,0 +1,6 @@
+framework module ELEditor {
+  umbrella header "ELEditor-umbrella.h"
+
+  export *
+  module * { export * }
+}
