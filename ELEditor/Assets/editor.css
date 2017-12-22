@@ -44,7 +44,7 @@ body {
 
 /*#MARK: - 输入框*/
 .field {
-    color: #404146;
+    color: #4D4D4D;
 }
 
 .placeholder:before {
@@ -52,6 +52,7 @@ body {
     content: attr(placeholder);
     color: #8B8687;
 }
+
 
 /*#MARK: - 标题*/
 #title {
@@ -71,11 +72,24 @@ body {
 /*#MARK: - 内容区*/
 #content {
     margin: 0.3rem 0.4rem 0rem 0.4rem;
-    font-size: 0.32rem;
-    line-height: 0.4rem;
+    font-size: 0.34rem;
+    font-weight: 400;
+    line-height:0.56rem;
+    letter-spacing:0.006rem;
 }
 
-#content p{
+#content p {
     margin-top: 0.6rem;
     text-align:justify;
 }
+
+/*#MARK: - 夜间模式*/
+.night-mode {
+    background-color: #333333;
+}
+.night-mode .field,
+.night-mode .field p{
+    color: #9A9A9A;
+}
+.night-mode #separator { background-color: #717073; }
+.night-mode #cover { background-color: #414141; }

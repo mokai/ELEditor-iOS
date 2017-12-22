@@ -9,7 +9,6 @@ open class ELEditorViewController: UIViewController {
         setupEditorView()
     }
     
-    
     fileprivate func setupEditorView() {
         editorView = ELEditorView(frame: self.view.frame)
         view.addSubview(editorView)

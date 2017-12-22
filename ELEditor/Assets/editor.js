@@ -2,9 +2,13 @@
 var Enclave = {};
 Enclave.margin = 25;
 Enclave.defaultCallbackSeparator = '~';
+Enclave.defaultHtml = "<p><br></p>";
 
-// 是否为iOS
+//使用平台
 Enclave.isiOS = true;
+Enclave.isAndroid = false;
+
+Enclave.isDebug = false;
 
 // 交互原生
 Enclave.bridge;
@@ -23,8 +27,8 @@ Enclave.currentSelection = {
 };
 
 /*
-初始化
-*/
+ 初始化
+ */
 Enclave.init = function(bridge) {
     this.bridge = bridge;
     
@@ -32,44 +36,64 @@ Enclave.init = function(bridge) {
     this.cover = new ELCover($('#cover'));
     this.title = new ELField($('#title'));
     this.content = new ELField($('#content'));
-
+    
     this.title.setPlaceholder("标题");
     this.content.setPlaceholder("正文");
-
+    
     var self = this;
     this.title.wrappedObject.bind('keydown', function(e) {
-        if (e.keyCode == '13') {
-            self.content.focus();
-            e.preventDefault();
-        }
-    });
-
+                                  if (e.keyCode == '13') {
+                                  self.content.focus();
+                                  e.preventDefault();
+                                  }
+                                  });
+    
     document.execCommand('defaultParagraphSeparator', false, 'p');
     this.domLoadedCallback();
 }
 
 Enclave.callback = function(callbackScheme, callbackPath) {
-    this.bridge.callback(callbackScheme, callbackPath);
-};
+    var callbackObject = null;
+    if(Enclave.isiOS) {
+        callbackObject = this.bridge;
+    }
+    else if(Enclave.isAndroid) {
+        if (nativeState.androidApiLevel < 17) {
+            callbackObject = this.bridge;
+        } else {
+            callbackObject = EnclaveNative;
+        }
+    }
+    callbackObject.callback(callbackScheme, callbackPath);
+}
 
 Enclave.log = function(msg) {
-    this.bridge.log(msg);
+    var logObject = null;
+    if(Enclave.isiOS) {
+        logObject = this.bridge;
+    }
+    else if(Enclave.isAndroid) {
+        logObject = console;
+    }
+    logObject.log(msg);
 }
 
 Enclave.domLoadedCallback = function() {
     this.callback("callback-dom-loaded");
-};
+}
 
 // MARK: - Selection
 document.addEventListener('selectionchange', function(e) {
-    if (Enclave.isFocused()) {
-        Enclave.backuprange();
-    }
-    //Enclave.onContentChanged(e);
-    if ((window.getSelection().toString().length <= 0 && Enclave.isFocused())){
-        Enclave.calculateEditorHeightWithCaretPosition();
-    }
-});
+                          if (Enclave.isFocus()) {
+                          Enclave.backupRange();
+                          }
+                          //Enclave.onContentChanged(e);
+                          if(Enclave.isiOS) {
+                          if ((window.getSelection().toString().length <= 0 && Enclave.isFocus())){
+                          Enclave.calculateEditorHeightWithCaretPosition();
+                          }
+                          }
+                          })
 
 // 将编辑框滚动到正确的位置
 Enclave.calculateEditorHeightWithCaretPosition = function() {
@@ -81,18 +105,17 @@ Enclave.calculateEditorHeightWithCaretPosition = function() {
         // 这里滚到光标头部位置
         // 光标所在位置被滚动到顶部
         newPosotion = currentSelectionY - this.preSpanHeight;
-        window.scrollTo(0, newPosotion);
     } else if (currentSelectionY >= (scrollOffsetY + containerHeight)) {
         // 光标位置在界面下面看不到
         // 这里滚到光标底部位置
         newPosotion = currentSelectionY - containerHeight;
-        window.scrollTo(0, newPosotion);
     }
+    window.scrollTo(0, newPosotion);
 }
 
 // 获取当前光标的位置
 Enclave.getCaretYPosition = function() {
-    if (this.isFocused()) {
+    if (this.isFocus()) {
         var selection = window.getSelection();
         
         var baseNode = selection.baseNode;
@@ -123,7 +146,7 @@ Enclave.getCaretYPosition = function() {
                 range.setEnd(this.currentSelection.endContainer, this.currentSelection.endOffset);
             }
         }
-
+        
     } else {
         var selection = this.currentSelection;
         var range = document.createRange();
@@ -135,61 +158,61 @@ Enclave.getCaretYPosition = function() {
             range.setEnd(this.currentSelection.endContainer, this.currentSelection.endOffset);
         }
     }
-  var spanNode = document.createElement('span');
-  spanNode.innerHTML = '<br>';
-  spanNode.style.cssText = 'display: inline-block;';
-  // collapse的意思是位到这个range的头部还是尾部，如果参数是true则定位到头部，如果是false则定位到尾部
-  range.collapse(false);
-  range.insertNode(spanNode);
-  // 插入一个临时的标签然后计算这个标签的位置，就是光标的位置。操作完之后再把这个标签remove掉
-  var position = this.getCoords(spanNode);
-  this.preSpanHeight = position.height == 0 ? this.preSpanHeight : position.height;
-  var topPosition = position.top + this.preSpanHeight;
-  spanNode.parentNode.removeChild(spanNode);
-  return topPosition;
+    var spanNode = document.createElement('span');
+    spanNode.innerHTML = '<br>';
+    spanNode.style.cssText = 'display: inline-block;';
+    // collapse的意思是位到这个range的头部还是尾部，如果参数是true则定位到头部，如果是false则定位到尾部
+    range.collapse(false);
+    range.insertNode(spanNode);
+    // 插入一个临时的标签然后计算这个标签的位置，就是光标的位置。操作完之后再把这个标签remove掉
+    var position = this.getCoords(spanNode);
+    this.preSpanHeight = position.height == 0 ? this.preSpanHeight : position.height;
+    var topPosition = position.top + this.preSpanHeight;
+    spanNode.parentNode.removeChild(spanNode);
+    return topPosition;
 }
 
 
 Enclave.getCoords = function(elem) {
     var box = elem.getBoundingClientRect();
-
+    
     var body = document.body;
     var docEl = document.documentElement;
-
+    
     var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
     var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
-
+    
     var clientTop = docEl.clientTop || body.clientTop || 0;
     var clientLeft = docEl.clientLeft || body.clientLeft || 0;
-
+    
     var top = box.top + scrollTop - clientTop;
     var left = box.left + scrollLeft - clientLeft;
-
+    
     return {
-        top: Math.round(top),
-        left: Math.round(left),
-        height: box.height,
-        width: box.width
+    top: Math.round(top),
+    left: Math.round(left),
+    height: box.height,
+    width: box.width
     };
 }
 
 
-Enclave.isFocused = function() {
-    return this.content.isFocused() || this.title.isFocused()
+Enclave.isFocus = function() {
+    return this.content.isFocus() || this.title.isFocus()
 }
 
 Enclave.currentFocusField = function() {
-    if (this.content.isFocused()) {
+    if (this.content.isFocus()) {
         return this.content;
-    } 
-    else if (this.title.isFocused()) {
+    }
+    else if (this.title.isFocus()) {
         return this.title;
     } else {
         return null;
     }
 }
 
-Enclave.backuprange = function() {
+Enclave.backupRange = function() {
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
         var range = selection.getRangeAt(0);
@@ -202,7 +225,7 @@ Enclave.backuprange = function() {
     }
 }
 
-Enclave.restorerange = function() {
+Enclave.restoreRange = function() {
     var selection = window.getSelection();
     selection.removeAllRanges();
     var range = document.createRange();
@@ -218,6 +241,18 @@ Enclave.generateEmptyPara = function(){
     return emptyPara;
 }
 
+// MARK: - 夜间模式
+
+//切换到夜间模式
+Enclave.switchToNightMode = function() {
+    document.querySelector('html').classList.add('night-mode')
+}
+
+//切换到白天模式
+Enclave.switchToLightMode = function() {
+    document.querySelector('html').classList.remove('night-mode')
+}
+
 
 // MARK: - 字段对象
 function ELField(wrappedObject) {
@@ -228,7 +263,7 @@ function ELField(wrappedObject) {
     
     //设置默认的html元素
     if (!this.hasNoStyle) {
-        this.setHtml('<p><br/></p>');
+        this.setHtml(Enclave.defaultHtml);
     }
     this.bindEventListeners();
 }
@@ -236,18 +271,19 @@ function ELField(wrappedObject) {
 ELField.prototype.callbackId = function() {
     return 'id=' + this.id;
 }
+
 ELField.prototype.wrappedDomNode = function() {
     return this.wrappedObject[0];
-};
+}
 
 ELField.prototype.bindEventListeners = function() {
     var self = this;
     this.wrappedObject.bind('input', function(e) {
-        self.onInput(e);
-    });
+                            self.onInput(e);
+                            });
     this.wrappedObject.bind('paste', function(e) {
-        self.onPaste(e);
-    });
+                            self.onPaste(e);
+                            });
 }
 
 ELField.prototype.onPaste = function(e) {
@@ -272,22 +308,23 @@ ELField.prototype.onPaste = function(e) {
 }
 
 ELField.prototype.onInput = function(e) {
-    this.refreshPlaceholder();
     if (!this.hasNoStyle) {
         if (this.isEmpty()) {
             this.setHeading('p');
         } else {
-            // 在编辑器最末尾补一个空行
-            if (this.wrappedDomNode().lastChild) {
-                var lastChild = this.wrappedDomNode().lastChild;
-                if (lastChild.tagName && (lastChild.tagName.toLowerCase() == 'p') 
-                    && (lastChild.innerHTML == '<br />'
-                        || lastChild.innerHTML == '<br/>'
-                        || lastChild.innerHTML == '<br>' 
-                        || lastChild.innerHTML.length == 0)) {
-                } else {
-                    var newEmptyLine = Enclave.generateEmptyPara();
-                    this.wrappedDomNode().appendChild(newEmptyLine);
+            //iOS下中文联想会产生跳跃，所以在编辑器最末尾补一个空行
+            if(Enclave.isiOS) {
+                if (this.wrappedDomNode().lastChild) {
+                    var lastChild = this.wrappedDomNode().lastChild;
+                    if (lastChild.tagName && (lastChild.tagName.toLowerCase() == 'p')
+                        && (lastChild.innerHTML == '<br />'
+                            || lastChild.innerHTML == '<br/>'
+                            || lastChild.innerHTML == '<br>'
+                            || lastChild.innerHTML.length == 0)) {
+                        } else {
+                            var newEmptyLine = Enclave.generateEmptyPara();
+                            this.wrappedDomNode().appendChild(newEmptyLine);
+                        }
                 }
             }
         }
@@ -296,8 +333,16 @@ ELField.prototype.onInput = function(e) {
     //字段内容改变回调
     if(this.getHtml() != this.lastHtml) {
         this.lastHtml = this.getHtml();
-        Enclave.callback('callback-field-valuechange', this.callbackId());
+        var joinedArguments = this.callbackId();
+        //Android直接回调更改内容
+        if(Enclave.isAndroid) {
+            var valueArgument = "value=" + this.lastHtml;
+            joinedArguments = joinedArguments + Enclave.defaultCallbackSeparator +
+            valueArgument;
+        }
+        Enclave.callback('callback-field-valuechange', joinedArguments);
     }
+    this.refreshPlaceholder();
 }
 
 
@@ -306,31 +351,30 @@ ELField.prototype.setHeading = function(heading) {
     var formatTag = heading;
     var formatBlock = document.queryCommandValue('formatBlock');
     if (formatBlock != formatTag) {
-        document.execCommand('formatBlock', false, '<' + formatTag + '>');    
+        document.execCommand('formatBlock', false, '<' + formatTag + '>');
     }
 }
 
 
 // MARK: - Focus
 
-ELField.prototype.isFocused = function() {
+ELField.prototype.isFocus = function() {
     return this.wrappedObject.is(':focus');
-};
+}
 
 ELField.prototype.focus = function() {
-    if (!this.isFocused()) {
+    if (!this.isFocus()) {
         this.wrappedObject.focus();
     }
-};
+}
 
 ELField.prototype.blur = function() {
-    if (this.isFocused()) {
+    if (this.isFocus()) {
         this.wrappedObject.blur();
     }
-};
+}
 
 // MARK: - Content
-
 ELField.prototype.getText = function() {
     return this.wrappedObject.text();
 }
@@ -341,8 +385,26 @@ ELField.prototype.setText = function(text) {
 }
 
 ELField.prototype.getHtml = function() {
-    return this.wrappedObject.html();
+    var html = this.wrappedObject.html();
+    //替换&nbsp;成空格
+    html = html.replace(/&nbsp;/, " ");
+    
+    return html;
 }
+
+ELField.prototype.getHtmlForCallback = function() {
+    var value = this.getHtml();
+    // URI Encode HTML on API < 17 because of the use of WebViewClient.shouldOverrideUrlLoading. Data must
+    // be decoded in shouldOverrideUrlLoading.
+    if (nativeState.androidApiLevel < 17) {
+        value = encodeURIComponent(value);
+    }
+    var valueArgument = "value=" + value;
+    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
+    valueArgument;
+    Enclave.callback('callback-field-getvalue', joinedArguments);
+}
+
 
 ELField.prototype.setHtml = function(html) {
     if (this.hasNoStyle) {
@@ -354,11 +416,13 @@ ELField.prototype.setHtml = function(html) {
 }
 
 ELField.prototype.isEmpty = function() {
-    var html = this.getHtml();
-    if(html.indexOf('<img') !== -1) {
-        return false;
+    if (!this.hasNoStyle) {
+        var html = this.getHtml();
+        if(html.indexOf('<img') !== -1) {
+            return false;
+        }
     }
-
+    
     var text = this.getText();
     if(typeof(text) == 'undefined') {
         return true;
@@ -372,11 +436,13 @@ ELField.prototype.setPlaceholder = function(placeholder) {
     this.refreshPlaceholder();
 }
 
-ELField.prototype.refreshPlaceholder = function(){
-    if(this.isEmpty()) {
-        this.wrappedObject.addClass('placeholder');
-    } else {
+ELField.prototype.refreshPlaceholder = function() {
+    //当前字段有样式，且不为默认html时
+    //不为空时
+    if(!this.hasNoStyle && this.lastHtml != Enclave.defaultHtml || !this.isEmpty()) {
         this.wrappedObject.removeClass('placeholder');
+    } else {
+        this.wrappedObject.addClass('placeholder');
     }
 }
 
@@ -386,20 +452,25 @@ function ELCover(wrappedObject) {
     this.wrappedObject = wrappedObject;
     this.wrappedIconObject = wrappedObject.children('div');
     this.wrappedImageObject = wrappedObject.children('img');
-
+    this.id = wrappedObject.attr('id');
+    
     //事件
     var self = this;
     this.wrappedObject.on('click', function(e) {
-        self.onclick();
-    });
+                          self.onclick();
+                          });
     this.wrappedImageObject.on('load', function(e) {
-        self.onload();
-    });
-
+                               self.onload();
+                               });
+    
     this.clearCover();
     //设置icon的宽度
     var width = this.wrappedObject.css('width');
     this.wrappedIconObject.css('width', width);
+}
+
+ELCover.prototype.callbackId = function() {
+    return 'id=' + this.id;
 }
 
 // 清除封面图
@@ -431,6 +502,19 @@ ELCover.prototype.getCover = function() {
     return url;
 }
 
+ELCover.prototype.getCoverForCallback = function() {
+    var value = this.getCover();
+    // URI Encode HTML on API < 17 because of the use of WebViewClient.shouldOverrideUrlLoading. Data must
+    // be decoded in shouldOverrideUrlLoading.
+    if (nativeState.androidApiLevel < 17) {
+        value = encodeURIComponent(value);
+    }
+    var valueArgument = "value=" + value;
+    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
+    valueArgument;
+    Enclave.callback('callback-field-getvalue', joinedArguments);
+}
+
 //封面图加载成功，垂直居中处理
 ELCover.prototype.onload = function() {
     var imgHeight = this.wrappedImageObject.height();
@@ -440,17 +524,18 @@ ELCover.prototype.onload = function() {
     } else {
         this.wrappedImageObject.css('margin-top', '0px');
     }
-}    
- 
+}
+
 // 封面图点击事件
 ELCover.prototype.onclick = function() {
     var url = this.getCover();
     var arguments = ['url=' + encodeURIComponent(url)];
-    var joinedArguments = arguments.join(this.defaultCallbackSeparator);
+    var joinedArguments = arguments.join(Enclave.defaultCallbackSeparator);
     Enclave.callback('callback-cover-tap', joinedArguments);
-}   
+}
 
 
 
 //MARK: Start
 Enclave.init(new EnclaveBridge());
+

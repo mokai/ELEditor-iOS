@@ -53,15 +53,6 @@ extension ELEditorField: ELEditorFieldProtocol {
         return true
     }
     
-    public func focus() {
-        let jsCommand = jsAccessor.appending(".focus();")
-        self.webView?.stringByEvaluatingJavaScript(from: jsCommand)
-    }
-    
-    public func blur() {
-        let jsCommand = jsAccessor.appending(".blur();")
-        self.webView?.stringByEvaluatingJavaScript(from: jsCommand)
-    }
     
     public func setPlaceholder(_ string: String) {
         guard domLoaded else {
@@ -75,15 +66,16 @@ extension ELEditorField: ELEditorFieldProtocol {
     func handleDOMLoaded() {
         domLoaded = true
         
+        if let preloadedPlaceHolder  = self.preloadedPlaceHolder {
+            self.setPlaceholder(preloadedPlaceHolder)
+            self.preloadedPlaceHolder = nil
+        }
+        
         if let preloadedValue = self.preloadedValue as? String {
             self.setValue(preloadedValue)
             self.preloadedValue = nil
         }
         
-        if let preloadedPlaceHolder  = self.preloadedPlaceHolder {
-            self.setPlaceholder(preloadedPlaceHolder)
-            self.preloadedPlaceHolder = nil
-        }
     }
     
 }

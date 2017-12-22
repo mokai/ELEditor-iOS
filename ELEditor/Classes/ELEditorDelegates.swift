@@ -60,16 +60,10 @@ public protocol ELEditorFieldProtocol: NSObjectProtocol {
     func getValue() -> String
     
     /// 设置内容
-    func setValue(_ string: String)
+    func setValue(_ value: String)
     
     /// 是否为空
     func isEmpty() -> Bool
-    
-    /// 获取输入焦点
-    func focus()
-    
-    /// 离开输入焦点
-    func blur()
     
     /// 设置默认文本
     func setPlaceholder(_ string: String)

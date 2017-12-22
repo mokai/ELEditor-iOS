@@ -74,36 +74,64 @@ open class ELEditorView: UIView {
 // MARK: - Public
 extension ELEditorView: ELEditorCoverProtocol {
     
+    /**
+     * 获取封面图
+     * @return 如果没有封面图时则返回null
+     */
     public func getCover() -> URL? {
         return cover.getCover()
     }
     
+    /**
+     * 更新封面图
+     * @param url 为nil时清除封面图
+     */
     public func updateCover(_ url: URL?) {
         cover.updateCover(url)
     }
     
-    public func setTitle(_ title: String) {
-        titleField.setValue(title)
-    }
-    
+    /**
+     * 获取标题
+     */
     public func getTitle() -> String {
         return titleField.getValue()
     }
     
+    /**
+     * 设置标题
+     */
+    public func setTitle(_ title: String) {
+        titleField.setValue(title)
+    }
+    
+    /**
+     * 获取内容
+     */
     public func setContent(_ title: String) {
         contentField.setValue(title)
     }
     
+    /**
+     * 设置内容
+     */
     public func getContent() -> String {
         return contentField.getValue()
     }
     
+    /**
+     * 切换至夜间模式
+     */
     public func switchToNightMode() {
-        
+        webView.backgroundColor = UIColor(red: 0.200, green: 0.200, blue: 0.200, alpha: 1.0)
+        webView.stringByEvaluatingJavaScript(from: "Enclave.switchToNightMode();")
     }
     
+    /**
+     * 切换至日间模式
+     */
     public func switchToLightMode() {
-        
+        webView.backgroundColor = .white
+        webView.stringByEvaluatingJavaScript(from: "Enclave.switchToLightMode();")
     }
     
 }
