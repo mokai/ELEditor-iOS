@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "UIWebView+CustomInputAccessoryView.h"
 
 FOUNDATION_EXPORT double ELEditorVersionNumber;
 FOUNDATION_EXPORT const unsigned char ELEditorVersionString[];

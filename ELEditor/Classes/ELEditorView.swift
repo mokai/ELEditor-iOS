@@ -46,14 +46,22 @@ open class ELEditorView: UIView {
         webView.backgroundColor = .white
         webView.scalesPageToFit = true
         webView.delegate = self
+        webView.hidesInputAccessoryView = true
         webView.isOpaque = false //防止出现黑线
         addSubview(webView)
         webView.snp.makeConstraints { (mk) in
-            mk.edges.equalToSuperview()
+            if #available(iOS 11.0, *) {
+                mk.edges.equalTo(self.safeAreaLayoutGuide)
+            } else {
+                mk.edges.equalToSuperview()
+            }
         }
         
-        let url = Bundle(for: ELEditorView.self).url(forResource: "editor", withExtension: "html")!
-        webView.loadRequest(URLRequest(url: url))
+        let htmlURL = Bundle(for: ELEditorView.self).url(forResource: "editor", withExtension: "html")!
+        var html = try! NSString(contentsOf: htmlURL, encoding: String.Encoding.utf8.rawValue)
+        html = html.replacingOccurrences(of: "{NATIVE_PLATFORM}", with: "iOS")
+            .replacingOccurrences(of: "//{NATIVE_TEMPLATE}", with: "") as NSString
+        webView.loadHTMLString(html as String, baseURL: htmlURL.deletingLastPathComponent())
     }
     
     fileprivate func setupComponents() {
@@ -141,31 +149,22 @@ extension ELEditorView: ELEditorCoverProtocol {
 extension ELEditorView {
     
     func addKeyboardObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow(_:)), name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShowOrHide(_:)), name: .UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShowOrHide(_:)), name: .UIKeyboardWillHide, object: nil) 
     }
     
-    @objc func keyboardDidShow(_ notification: Notification) {
-        //webView.customInputAccessoryView = customInputAccessoryView
-        let info = notification.userInfo
-        let value = info![UIKeyboardFrameEndUserInfoKey] as AnyObject
-        let rawFrame = value.cgRectValue!
-        let keyboardFrame = self.convert(rawFrame, from: nil)
-        webView.snp.updateConstraints { (mk) in
-            mk.bottom.equalTo(-keyboardFrame.height)
+    @objc func keyboardWillShowOrHide(_ notification: Notification) {
+        var contentHeight = webView.frame.height
+        if #available(iOS 11.0, *) {
+            contentHeight += self.safeAreaInsets.bottom
         }
-        UIView.animate(withDuration: 0.25) {
-            self.layoutIfNeeded()
+        if notification.name == .UIKeyboardWillShow {
+            let value = notification.userInfo![UIKeyboardFrameEndUserInfoKey] as AnyObject
+            let keyboardFrame = self.convert(value.cgRectValue!, from: nil)
+            
+            contentHeight -= keyboardFrame.height
         }
-    }
-    
-    @objc func keyboardWillHide(_ notification: Notification) {
-        webView.snp.updateConstraints { (mk) in
-             mk.bottom.equalToSuperview()
-        }
-        UIView.animate(withDuration: 0.25) {
-            self.layoutIfNeeded()
-        }
+        webView.stringByEvaluatingJavaScript(from: "native.contentHeight = \(contentHeight);")
     }
 }
 
@@ -269,7 +268,7 @@ extension ELEditorView {
     /// - Returns: 参数字典
     func parseParameters(_ url: URL) -> [String: String] {
         var returnParameters: [String: String] = [:]
-        guard let parameters = (url as! NSURL).resourceSpecifier?.components(separatedBy: "~") else {
+        guard let parameters = (url as! NSURL).resourceSpecifier?.removingPercentEncoding?.components(separatedBy: "~") else {
             return returnParameters
         }
         

@@ -1,22 +1,22 @@
 * {
-    outline: 0 solid transparent;
     -webkit-tap-highlight-color: rgba(0,0,0,0);
     -webkit-touch-callout: none;
 }
 
 html {
     font-size: 62.5%;
+    font-family: sans-serif;
 }
 
 html, body {
     margin:0;
-    padding:0;
-    font-family: sans-serif;
+    height:100%;
 }
 
 body {
     overflow: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /*#MARK: - 头图*/
@@ -45,6 +45,8 @@ body {
 /*#MARK: - 输入框*/
 .field {
     color: #4D4D4D;
+    -webkit-user-select:auto !important;
+    -webkit-user-modify:read-write !important;
 }
 
 .placeholder:before {

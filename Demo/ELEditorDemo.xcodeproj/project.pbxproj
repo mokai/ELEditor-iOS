@@ -19,6 +19,7 @@
 		6F1C81DE1FD9688700DC2E2D /* ELEditorDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F1C81DD1FD9688700DC2E2D /* ELEditorDemoUITests.swift */; };
 		6F249BDE1FDA8A4800A9357C /* ELImageSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F249BDD1FDA8A4800A9357C /* ELImageSelector.swift */; };
 		6F249BE21FDAB1C500A9357C /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F249BE11FDAB1C500A9357C /* Util.swift */; };
+		6F434DA31FF1FF6500805D4E /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F434DA21FF1FF6500805D4E /* Test.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,9 @@
 		6F1C81DF1FD9688700DC2E2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6F249BDD1FDA8A4800A9357C /* ELImageSelector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ELImageSelector.swift; sourceTree = "<group>"; };
 		6F249BE11FDAB1C500A9357C /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
+		6F434DA01FF1FF6400805D4E /* ELEditorDemo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ELEditorDemo-Bridging-Header.h"; sourceTree = "<group>"; };
+		6F434DA11FF1FF6500805D4E /* Test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Test.h; path = "../../../../../../gkk/Desktop/Demo/ELEdtior-iOS/Demo/ELEditorDemo/Test.h"; sourceTree = "<group>"; };
+		6F434DA21FF1FF6500805D4E /* Test.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Test.m; path = "../../../../../../gkk/Desktop/Demo/ELEdtior-iOS/Demo/ELEditorDemo/Test.m"; sourceTree = "<group>"; };
 		E4E27ABB8BDF441BF66EFB8F /* Pods-ELEditorDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ELEditorDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-ELEditorDemo/Pods-ELEditorDemo.release.xcconfig"; sourceTree = "<group>"; };
 		E79635B0CA2A42602D79F3B6 /* Pods_ELEditorDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ELEditorDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -131,6 +135,9 @@
 				6F249BE11FDAB1C500A9357C /* Util.swift */,
 				6F1AA7381FED06F2008CA769 /* PreviewViewController.swift */,
 				6F1AA73A1FED0858008CA769 /* preview.html */,
+				6F434DA11FF1FF6500805D4E /* Test.h */,
+				6F434DA21FF1FF6500805D4E /* Test.m */,
+				6F434DA01FF1FF6400805D4E /* ELEditorDemo-Bridging-Header.h */,
 			);
 			path = ELEditorDemo;
 			sourceTree = "<group>";
@@ -232,6 +239,7 @@
 				TargetAttributes = {
 					6F1C81B91FD9688700DC2E2D = {
 						CreatedOnToolsVersion = 9.1;
+						LastSwiftMigration = 0910;
 						ProvisioningStyle = Automatic;
 					};
 					6F1C81CD1FD9688700DC2E2D = {
@@ -358,6 +366,7 @@
 				6F249BDE1FDA8A4800A9357C /* ELImageSelector.swift in Sources */,
 				6F1C81C01FD9688700DC2E2D /* ViewController.swift in Sources */,
 				6F249BE21FDAB1C500A9357C /* Util.swift in Sources */,
+				6F434DA31FF1FF6500805D4E /* Test.m in Sources */,
 				6F1AA7391FED06F2008CA769 /* PreviewViewController.swift in Sources */,
 				6F1C81BE1FD9688700DC2E2D /* AppDelegate.swift in Sources */,
 			);
@@ -526,12 +535,15 @@
 			baseConfigurationReference = 3D04FA13C8F480B357AEAAD2 /* Pods-ELEditorDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = MV762ECP27;
 				INFOPLIST_FILE = ELEditorDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = cn.enclavemedia.ELEditorDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "ELEditorDemo/ELEditorDemo-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -542,12 +554,14 @@
 			baseConfigurationReference = E4E27ABB8BDF441BF66EFB8F /* Pods-ELEditorDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = MV762ECP27;
 				INFOPLIST_FILE = ELEditorDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = cn.enclavemedia.ELEditorDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "ELEditorDemo/ELEditorDemo-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

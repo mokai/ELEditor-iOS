@@ -5,8 +5,8 @@ Enclave.defaultCallbackSeparator = '~';
 Enclave.defaultHtml = "<p><br></p>";
 
 //使用平台
-Enclave.isiOS = true;
-Enclave.isAndroid = false;
+Enclave.isiOS = native.platform == "iOS";
+Enclave.isAndroid = native.platform == "Android";
 
 Enclave.isDebug = false;
 
@@ -58,7 +58,7 @@ Enclave.callback = function(callbackScheme, callbackPath) {
         callbackObject = this.bridge;
     }
     else if(Enclave.isAndroid) {
-        if (nativeState.androidApiLevel < 17) {
+        if (native.androidApiLevel < 17) {
             callbackObject = this.bridge;
         } else {
             callbackObject = EnclaveNative;
@@ -84,22 +84,22 @@ Enclave.domLoadedCallback = function() {
 
 // MARK: - Selection
 document.addEventListener('selectionchange', function(e) {
-                          if (Enclave.isFocus()) {
-                          Enclave.backupRange();
-                          }
-                          //Enclave.onContentChanged(e);
-                          if(Enclave.isiOS) {
-                          if ((window.getSelection().toString().length <= 0 && Enclave.isFocus())){
-                          Enclave.calculateEditorHeightWithCaretPosition();
-                          }
-                          }
+                              if (Enclave.isFocus()) {
+                                Enclave.backupRange();
+                              }
+                              //Enclave.onContentChanged(e);
+                              if(Enclave.isiOS) {
+                                  if ((window.getSelection().toString().length <= 0 && Enclave.isFocus())){
+                                    Enclave.calculateEditorHeightWithCaretPosition();
+                                  }
+                              }
                           })
 
 // 将编辑框滚动到正确的位置
 Enclave.calculateEditorHeightWithCaretPosition = function() {
-    var currentSelectionY = this.getCaretYPosition();
     var scrollOffsetY = window.document.body.scrollTop;
-    var containerHeight = document.documentElement.clientHeight;
+    var containerHeight = native.contentHeight * window.devicePixelRatio; //iOS原生传过来的是pt
+    var currentSelectionY = this.getCaretYPosition();
     var newPosotion = window.pageYOffset;
     if (currentSelectionY - this.preSpanHeight < scrollOffsetY) {
         // 这里滚到光标头部位置
@@ -113,6 +113,7 @@ Enclave.calculateEditorHeightWithCaretPosition = function() {
     window.scrollTo(0, newPosotion);
 }
 
+// 获取当前光标的位置
 // 获取当前光标的位置
 Enclave.getCaretYPosition = function() {
     if (this.isFocus()) {
@@ -236,9 +237,9 @@ Enclave.restoreRange = function() {
 
 // 生成空段落
 Enclave.generateEmptyPara = function(){
-    var emptyPara = document.createElement('p');
-    emptyPara.innerHTML = '<br>';
-    return emptyPara;
+    var template = document.createElement('template');
+    template.innerHTML = this.defaultHtml;
+    return template.content.firstChild;
 }
 
 // MARK: - 夜间模式
@@ -389,6 +390,10 @@ ELField.prototype.getHtml = function() {
     //替换&nbsp;成空格
     html = html.replace(/&nbsp;/, " ");
     
+    if(Enclave.isiOS) {
+        //清除编辑器最末尾补的一个空行
+        html = html.replace(new RegExp(Enclave.defaultHtml + '$'), '')
+    }
     return html;
 }
 
@@ -396,7 +401,7 @@ ELField.prototype.getHtmlForCallback = function() {
     var value = this.getHtml();
     // URI Encode HTML on API < 17 because of the use of WebViewClient.shouldOverrideUrlLoading. Data must
     // be decoded in shouldOverrideUrlLoading.
-    if (nativeState.androidApiLevel < 17) {
+    if (native.androidApiLevel < 17) {
         value = encodeURIComponent(value);
     }
     var valueArgument = "value=" + value;
@@ -506,7 +511,7 @@ ELCover.prototype.getCoverForCallback = function() {
     var value = this.getCover();
     // URI Encode HTML on API < 17 because of the use of WebViewClient.shouldOverrideUrlLoading. Data must
     // be decoded in shouldOverrideUrlLoading.
-    if (nativeState.androidApiLevel < 17) {
+    if (native.androidApiLevel < 17) {
         value = encodeURIComponent(value);
     }
     var valueArgument = "value=" + value;

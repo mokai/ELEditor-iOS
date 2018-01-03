@@ -13,9 +13,13 @@ open class ELEditorViewController: UIViewController {
         editorView = ELEditorView(frame: self.view.frame)
         view.addSubview(editorView)
         editorView.snp.makeConstraints { (mk) in
-            mk.edges.equalToSuperview()
+            if #available(iOS 11.0, *) {
+                mk.edges.equalToSuperview()
+            } else {
+                mk.left.right.equalToSuperview()
+                mk.top.equalTo(self.topLayoutGuide.snp.bottom)
+                mk.bottom.equalTo(self.bottomLayoutGuide.snp.top)
+            }
         }
     }
-    
-    
 }
