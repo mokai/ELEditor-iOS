@@ -7,15 +7,29 @@
 //
 
 import UIKit
+import ELEditor
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
+    var isLightTheme = true
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Override point for customization after application launch.l
+        
+        ELEdtiorConfiguration.tintColor = {
+            return self.isLightTheme ? UIColor(red:0.251 , green:0.255 , blue:0.275, alpha:1.0) : UIColor(red: 0.604, green: 0.604, blue: 0.604, alpha: 1.0)
+        }
+        
+        ELEdtiorConfiguration.backgroundColor = {
+            return self.isLightTheme ? .white : UIColor(red: 0.200, green: 0.200, blue: 0.200, alpha: 1.0)
+        }
+        
+        ELEdtiorConfiguration.borderColor = {
+            return self.isLightTheme ?  UIColor.black.withAlphaComponent(0.16) : UIColor(red: 0.318, green: 0.318, blue: 0.318, alpha: 1.0)
+        }
         return true
     }
 

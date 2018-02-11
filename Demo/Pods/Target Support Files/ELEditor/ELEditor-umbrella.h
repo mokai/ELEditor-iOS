@@ -11,6 +11,9 @@
 #endif
 
 #import "UIWebView+CustomInputAccessoryView.h"
+#import "Waver.h"
+#import "lame.h"
+#import "Mp3Covert.h"
 
 FOUNDATION_EXPORT double ELEditorVersionNumber;
 FOUNDATION_EXPORT const unsigned char ELEditorVersionString[];

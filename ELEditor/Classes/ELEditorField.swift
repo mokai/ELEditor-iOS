@@ -7,6 +7,12 @@
 
 import UIKit
 
+public extension UITextField {
+    
+    public func test() { }
+    
+}
+
 open class ELEditorField: NSObject, ELEditorComponent {
     var jsAccessor: String
     var jsId: String
@@ -28,7 +34,7 @@ extension ELEditorField: ELEditorFieldProtocol {
         guard domLoaded else {
             return (preloadedValue as? String) ?? ""
         }
-        let jsCommand = jsAccessor.appending(".getHtml();")
+        let jsCommand = jsAccessor.appending(".getHTML();")
         return self.webView?.stringByEvaluatingJavaScript(from: jsCommand) ?? ""
     }
     
@@ -37,7 +43,8 @@ extension ELEditorField: ELEditorFieldProtocol {
             preloadedValue = string
             return
         }
-        let jsCommand = jsAccessor.appending(".setHtml('\(string)');")
+        let value = formatValue(string)
+        let jsCommand = jsAccessor.appending(".setHTML('\(value)');")
         self.webView?.stringByEvaluatingJavaScript(from: jsCommand)
     }
     
@@ -52,7 +59,6 @@ extension ELEditorField: ELEditorFieldProtocol {
         }
         return true
     }
-    
     
     public func setPlaceholder(_ string: String) {
         guard domLoaded else {
@@ -75,7 +81,30 @@ extension ELEditorField: ELEditorFieldProtocol {
             self.setValue(preloadedValue)
             self.preloadedValue = nil
         }
-        
     }
     
+    func formatValue(_ value: String) -> String {
+        return value.replacingOccurrences(of: "'", with: "\\'")
+    }
+}
+
+//MARK: - Content
+extension ELEditorField {
+    
+    func insertImage(_ url: URL) {
+        guard domLoaded else {
+            return
+        }
+        self.webView?.becomeFirstResponder()
+        let jsCommand = jsAccessor.appending(".insertImage('\(url.absoluteString)');")
+        self.webView?.stringByEvaluatingJavaScript(from: jsCommand)
+    }
+    
+    func insertRecord(_ url: URL, duration: String) {
+        guard domLoaded else {
+            return
+        }
+        let jsCommand = jsAccessor.appending(".insertRecord('\(url.absoluteString)', '\(formatValue(duration))');")
+        self.webView?.stringByEvaluatingJavaScript(from: jsCommand)
+    }
 }

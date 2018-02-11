@@ -53,14 +53,18 @@ body {
     position: absolute;
     content: attr(placeholder);
     color: #8B8687;
+    margin-left: 0.4rem;
 }
-
 
 /*#MARK: - 标题*/
 #title {
     font-size: 0.4rem;
     line-height: 0.56rem;
     margin: 0.3rem 0.4rem 0.3rem 0.4rem;
+}
+
+#title:before {
+    margin-left: 0rem;
 }
 
 /*#MARK: - 分隔线*/
@@ -73,7 +77,6 @@ body {
 
 /*#MARK: - 内容区*/
 #content {
-    margin: 0.3rem 0.4rem 0rem 0.4rem;
     font-size: 0.34rem;
     font-weight: 400;
     line-height:0.56rem;
@@ -81,8 +84,51 @@ body {
 }
 
 #content p {
-    margin-top: 0.6rem;
+    margin: 0.6rem 0.4rem 0rem 0.4rem;
     text-align:justify;
+}
+
+/*图片*/
+#content .img-container {
+    margin-top: 0.6rem;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#content .img-container img {
+    width: 100%;
+    display: block;
+}
+
+/*录音*/
+#content .record-container {
+    height: 1.18rem;
+    border-radius: 0.08rem;
+    border: 0.02rem solid #E4E4E4;
+}
+#content .record-play {
+    width:0.56rem;
+    height:0.56rem;
+    display: inline;
+    margin-left: 0.32rem;
+    margin-top: 0.32rem;
+    float: left;
+}
+#content .record-duration {
+    font-size:0.28rem;
+    color:rgba(99,99,99,1);
+    margin-left:0.26rem;
+    margin-top:0.4rem;
+    line-height:0.4rem;
+    display: inline-block;
+}
+#content .record-delete {
+    width:0.48rem;
+    height:0.48rem;
+    display: inline;
+    margin-top: 0.36rem;
+    float: right;
+    margin-right: 0.32rem;
 }
 
 /*#MARK: - 夜间模式*/
@@ -95,3 +141,6 @@ body {
 }
 .night-mode #separator { background-color: #717073; }
 .night-mode #cover { background-color: #414141; }
+.night-mode #content .record-container {
+    border-color: #515151;
+}

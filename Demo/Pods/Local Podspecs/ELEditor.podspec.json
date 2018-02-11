@@ -17,15 +17,13 @@
   "platforms": {
     "ios": "8.0"
   },
-  "source_files": "Classes",
+  "source_files": [
+    "Classes",
+    "Classes/**/*"
+  ],
+  "vendored_frameworks": "Classes/ELRecord/VoiceLib/lame.framework",
   "resources": [
-    "Assets/*.png",
-    "Assets/*.html",
-    "Assets/*.js",
-    "Assets/*.svg",
-    "Assets/*.css",
-    "Assets/*.storyboard",
-    "Assets/*.xib"
+    "Assets/*"
   ],
   "exclude_files": "Classes/exclude",
   "requires_arc": true,

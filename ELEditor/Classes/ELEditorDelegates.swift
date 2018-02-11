@@ -13,15 +13,22 @@ import UIKit
     // 编辑器初始化完成
     @objc optional func editorViewDidFinishLoadingDOM(_ editorView: ELEditorView)
     
-    // 封面点击
-    func editorView(_ editorView: ELEditorView, coverTappedWith url: URL?)
-    
     // 标题改变
     @objc optional func editorViewTitleDidChange(_ editorView: ELEditorView)
     
     // 内容改变
     @objc optional func editorViewContentDidChange(_ editorView: ELEditorView)
+    
+    // 封面改变
+    @objc optional func editorViewCoverDidChange(_ editorView: ELEditorView)
 }
+
+/// 编辑器内部回调
+@objc public protocol ELEditorViewInternalDelegate: UIWebViewDelegate {
+    // 封面点击
+    func editorView(_ editorView: ELEditorView, coverTappedWith url: URL?)
+}
+
 
 /// 组件接口
 protocol ELEditorComponent: NSObjectProtocol {

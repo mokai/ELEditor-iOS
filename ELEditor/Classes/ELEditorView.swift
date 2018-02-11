@@ -9,19 +9,22 @@ import UIKit
 import SnapKit
 
 open class ELEditorView: UIView {
-    open private(set) var webView: UIWebView!
+    open private(set) var webView: ELWebView!
     open private(set) var cover: ELEditorCover!
     open private(set) var titleField: ELEditorField!
     open private(set) var contentField: ELEditorField!
+    
+    var _inputAccessoryView: ELInputAccessoryView?
     
     /// dom是否已加载，否则不可操作
     fileprivate var domLoaded = false
     
     open weak var delegate: ELEditorViewDelegate?
+    //内部的回调
+    weak var internalDelegate: ELEditorViewInternalDelegate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         setup()
     }
     
@@ -42,7 +45,7 @@ open class ELEditorView: UIView {
     }
     
     fileprivate func setupWebView() {
-        webView = UIWebView(frame: self.frame)
+        webView = ELWebView(frame: self.frame)
         webView.backgroundColor = .white
         webView.scalesPageToFit = true
         webView.delegate = self
@@ -130,7 +133,9 @@ extension ELEditorView: ELEditorCoverProtocol {
      * 切换至夜间模式
      */
     public func switchToNightMode() {
-        webView.backgroundColor = UIColor(red: 0.200, green: 0.200, blue: 0.200, alpha: 1.0)
+        _inputAccessoryView?.onThemeChange()
+        backgroundColor = ELEdtiorConfiguration.backgroundColor()
+        webView.backgroundColor = backgroundColor
         webView.stringByEvaluatingJavaScript(from: "Enclave.switchToNightMode();")
     }
     
@@ -138,10 +143,17 @@ extension ELEditorView: ELEditorCoverProtocol {
      * 切换至日间模式
      */
     public func switchToLightMode() {
-        webView.backgroundColor = .white
+        _inputAccessoryView?.onThemeChange()
+        backgroundColor = ELEdtiorConfiguration.backgroundColor()
+        webView.backgroundColor = backgroundColor
         webView.stringByEvaluatingJavaScript(from: "Enclave.switchToLightMode();")
     }
     
+    ///当离开页面时备份当前选区
+    func backupRangeWhenDisappear() {
+        webView.stringByEvaluatingJavaScript(from: "Enclave.backupRange();")
+        webView.endEditing(true)
+    }
 }
 
 
@@ -158,11 +170,27 @@ extension ELEditorView {
         if #available(iOS 11.0, *) {
             contentHeight += self.safeAreaInsets.bottom
         }
-        if notification.name == .UIKeyboardWillShow {
-            let value = notification.userInfo![UIKeyboardFrameEndUserInfoKey] as AnyObject
-            let keyboardFrame = self.convert(value.cgRectValue!, from: nil)
-            
+        let value = notification.userInfo![UIKeyboardFrameEndUserInfoKey] as AnyObject
+        let duration = (notification.userInfo![UIKeyboardAnimationDurationUserInfoKey] as! NSNumber).doubleValue
+        
+        let keyboardFrame = self.convert(value.cgRectValue!, from: nil)
+        var isShow = notification.name == .UIKeyboardWillShow
+        if isShow {
             contentHeight -= keyboardFrame.height
+        }
+        //inputAccessoryView
+        if let inputAccessoryView = _inputAccessoryView {
+            let height = inputAccessoryView.frame.height
+            contentHeight -= height
+            inputAccessoryView.snp.updateConstraints({ (mk) in
+                mk.bottom.equalTo(isShow ? -keyboardFrame.height : height)
+            })
+            inputAccessoryView.isHidden = !isShow
+            UIView.animate(withDuration: duration, animations: {
+                inputAccessoryView.superview?.layoutIfNeeded()
+            })
+            //更新webView
+            webView.scrollView.contentInset.bottom = isShow ? height : 0
         }
         webView.stringByEvaluatingJavaScript(from: "native.contentHeight = \(contentHeight);")
     }
@@ -201,18 +229,27 @@ extension ELEditorView {
         }
         
         switch scheme {
-        case "callback-cover-tap":
-            handled = true
-            handleCoverTappedCallback(url)
-        case "callback-field-valuechange":
-            handled = true
-            handleFieldValueChangeCallback(url)
         case "callback-dom-loaded":
             handled = true
             handleDOMLoadedCallback(url)
         case "callback-log":
             handled = true
             handleLogCallback(url)
+        case "callback-cover-tap":
+            handled = true
+            handleCoverTappedCallback(url)
+        case "callback-field-valuechange":
+            handled = true
+            handleFieldValueChangeCallback(url)
+        case "callback-field-focus":
+            handled = true
+            handleFieldFocusCallback(url)
+        case "callback-field-deleteRecord":
+            handled = true
+            //handleFieldDeleteRecordCallback(url)
+        case "callback-field-playRecord":
+            handled = true
+            handleFieldPlayRecordCallback(url)
         default:
             handled = false
         }
@@ -244,7 +281,7 @@ extension ELEditorView {
         if let urlString = params["url"] {
             url = URL(string: urlString)
         }
-        delegate?.editorView(self, coverTappedWith: url)
+        internalDelegate?.editorView(self, coverTappedWith: url)
     }
     
     /// 字段内容改变
@@ -261,6 +298,23 @@ extension ELEditorView {
             }
         }
     }
+    
+    //字段获取输入焦点
+    private func handleFieldFocusCallback(_ url: URL) {
+        let params = parseParameters(url)
+        if let id = params["id"] {
+            _inputAccessoryView?.isEnableItem = id == contentField.jsId
+        }
+    }
+    
+    //正文中的音频开始播放
+    private func handleFieldPlayRecordCallback(_ url: URL) {
+        let params = parseParameters(url)
+        if let id = params["id"] {
+            
+        }
+    }
+    
     
     /// 转换参数
     ///

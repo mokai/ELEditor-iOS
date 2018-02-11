@@ -7,8 +7,9 @@ Pod::Spec.new do |s|
   s.author       = { "kk" => "kk@enclavelit.com" }
   s.source       = { :git => "https://github.com/mokai/ELEditor-iOS.git", :tag => s.version }
   s.platform     = :ios, '8.0'
-  s.source_files = 'Classes'
-  s.resources    = ["Assets/*.png", "Assets/*.html", "Assets/*.js", "Assets/*.svg", "Assets/*.css", "Assets/*.storyboard", "Assets/*.xib"]
+  s.source_files = 'Classes', 'Classes/**/*'
+  s.vendored_frameworks = 'Classes/ELRecord/VoiceLib/lame.framework'
+  s.resources    = ["Assets/*"]
   s.exclude_files = 'Classes/exclude'
   s.requires_arc = true
   s.frameworks   = "UIKit", "JavaScriptCore"
