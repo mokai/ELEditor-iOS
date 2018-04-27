@@ -9,32 +9,32 @@
 import UIKit
 
 /// 图片选择器
-public class ELImageSelector: NSObject {
+class ELImageSelector: NSObject {
     
     /// 扩展的action
-    public var extraActions: [UIAlertAction] = []
+    var extraActions: [UIAlertAction] = []
     
     /// 扩展的action是否追加尾部，否则在最前面插入
-    public var isAppendExtraActions = true
+    var isAppendExtraActions = true
     
     ///是否可以编辑，默认不可编辑
-    public var allowsEditing: Bool = false
+    var allowsEditing: Bool = false
     
     /// 标题
-    public var title = "选择图片"
+    var title = "选择图片"
     
     //是否压缩，默认压缩
-    public var isCompression: Bool = true
+    var isCompression: Bool = true
     
     ///回调
-    public var onSelectImageCallback: ((UIImage)->())? //选择图片
-    public var onCancelCallback: (()->())? //取消选择
+    var onSelectImageCallback: ((UIImage)->())? //选择图片
+    var onCancelCallback: (()->())? //取消选择
     
     fileprivate weak var viewController: UIViewController?
     fileprivate var imagePickerController: UIImagePickerController?
     fileprivate var sourceView: UIView!
     
-    public init(viewController: UIViewController) {
+    init(viewController: UIViewController) {
         super.init()
         self.viewController = viewController
     }
@@ -44,9 +44,9 @@ public class ELImageSelector: NSObject {
     /// - Parameters:
     ///   - sourceView: 用于iPad下的popoverPresentationController，如果传nil默认取UIUtil.currentViewController?.view
     ///   - fromPhotoLibrary: 是否直接从相册取，默认为false
-    public func show(_ sourceView: UIView, fromPhotoLibrary: Bool = false) {
+    func show(_ sourceView: UIView, fromPhotoLibrary: Bool = false) {
         //隐藏音乐圈
-        //MusicManager.shared.isHidden = true
+        //ELMediaManager.shared.isAudioBarHidden = true
         //直接从相册取
         if fromPhotoLibrary {
             self.chooseImageForm(.photoLibrary)

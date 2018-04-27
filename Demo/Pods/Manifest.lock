@@ -1,19 +1,23 @@
 PODS:
-  - ELEditor (0.1):
+  - ELEditor (1.0):
     - SnapKit (~> 4.0.0)
   - SnapKit (4.0.0)
 
 DEPENDENCIES:
   - ELEditor (from `../ELEditor`)
 
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - SnapKit
+
 EXTERNAL SOURCES:
   ELEditor:
-    :path: ../ELEditor
+    :path: "../ELEditor"
 
 SPEC CHECKSUMS:
-  ELEditor: ac9361f7c30d62a0c084e9598c5eac7d14d92be6
+  ELEditor: f06ee7ad879a43c946281a4fccc0fc28e7c0bb5a
   SnapKit: a42d492c16e80209130a3379f73596c3454b7694
 
 PODFILE CHECKSUM: 2a6bfc539ddaae8745db5b4240511e50d23af255
 
-COCOAPODS: 1.4.0
+COCOAPODS: 1.5.0

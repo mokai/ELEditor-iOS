@@ -1,0 +1,48 @@
+/**
+ Enclave Mobile Audio CSS
+ v0.9
+ */
+/*旧文章样式下display: none;*/
+#content .el-audio {
+    height: 1.18rem;
+    border-radius: 0.08rem;
+    border: 0.02rem solid #CBCBCB;
+    margin: 0 0.4rem;
+    padding: 0;
+    margin-top: 0.6rem;
+}
+#content .el-audio-play {
+    width:0.56rem;
+    height:0.56rem;
+    margin-left: 0.32rem;
+    margin-top: 0.32rem;
+    float: left;
+}
+#content .el-audio-duration {
+    font-size:0.28rem;
+    height:0.48rem;
+    color:rgba(99,99,99,1);
+    margin-left:0.26rem;
+    margin-top:0.4rem;
+    line-height:0.4rem;
+    float: left;
+    text-align: center;
+}
+
+/*文章样式下display: none;*/
+#content .el-audio-delete {
+    width:0.48rem;
+    height:0.48rem;
+    margin-right: 0.32rem;
+    margin-top: 0.36rem;
+    float: right;
+}
+
+/*黑夜模式*/
+.night-mode #content  .el-audio {
+    border-color: #515151;
+}
+
+.night-mode #content .el-audio-duration {
+    color: #CDCDCD;
+}

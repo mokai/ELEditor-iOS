@@ -180,7 +180,6 @@
 				6F1C81B71FD9688700DC2E2D /* Frameworks */,
 				6F1C81B81FD9688700DC2E2D /* Resources */,
 				FCD08A608D7834B89B8DDDB2 /* [CP] Embed Pods Frameworks */,
-				09E75A42B70D6C1E04915265 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -303,21 +302,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		09E75A42B70D6C1E04915265 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ELEditorDemo/Pods-ELEditorDemo-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		5E40EACF1B1DB858ADD8FAF7 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

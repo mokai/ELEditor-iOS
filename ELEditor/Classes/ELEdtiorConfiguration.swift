@@ -10,6 +10,16 @@ import UIKit
 /// 模块配置入口
 public class ELEdtiorConfiguration: NSObject {
     
+    //日志输出
+    public static var log: ((String)->Void) = { (msg) in
+        print(msg)
+    }
+    
+    //当前是否为夜间模式
+    public static var isNightTheme: (()->Bool) = {
+        return false
+    }
+    
     //主题色
     public static var tintColor: (()->UIColor) = {
         return .black
@@ -65,13 +75,18 @@ public class ELEdtiorConfiguration: NSObject {
     }
     
     /// 格式化时长
-    static func formatSecondsToString(_ secounds: TimeInterval) -> String {
+    public static func formatSecondsToString(_ secounds: TimeInterval) -> String {
         if secounds.isNaN {
             return "00:00"
         }
         let Min = Int(secounds / 60)
         let Sec = Int(secounds.truncatingRemainder(dividingBy: 60))
         return String(format: "%02d:%02d", Min, Sec)
+    }
+    
+    //转移html中的单引号
+    static func escapingHTML(_ value: String) -> String {
+        return value.replacingOccurrences(of: "'", with: "\\'")
     }
 }
 

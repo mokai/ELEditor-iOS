@@ -10,18 +10,14 @@ import SnapKit
 
 open class ELEditorView: UIView {
     open private(set) var webView: ELWebView!
-    open private(set) var cover: ELEditorCover!
-    open private(set) var titleField: ELEditorField!
-    open private(set) var contentField: ELEditorField!
-    
     var _inputAccessoryView: ELInputAccessoryView?
+    fileprivate var jsBridge: ELEditorViewJavaScriptBridge?
     
-    /// dom是否已加载，否则不可操作
-    fileprivate var domLoaded = false
-    
-    open weak var delegate: ELEditorViewDelegate?
-    //内部的回调
-    weak var internalDelegate: ELEditorViewInternalDelegate?
+    weak var delegate: ELEditorViewJavaScriptBridgeDelegate? {
+        didSet {
+            jsBridge?.delegate = delegate
+        }
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -37,16 +33,15 @@ open class ELEditorView: UIView {
     }
     
     fileprivate func setup() {
-        backgroundColor = .clear
+        backgroundColor = ELEdtiorConfiguration.backgroundColor()
         
         setupWebView()
-        setupComponents()
         addKeyboardObserver()
     }
     
     fileprivate func setupWebView() {
         webView = ELWebView(frame: self.frame)
-        webView.backgroundColor = .white
+        webView.backgroundColor = ELEdtiorConfiguration.backgroundColor()
         webView.scalesPageToFit = true
         webView.delegate = self
         webView.hidesInputAccessoryView = true
@@ -62,98 +57,95 @@ open class ELEditorView: UIView {
         
         let htmlURL = Bundle(for: ELEditorView.self).url(forResource: "editor", withExtension: "html")!
         var html = try! NSString(contentsOf: htmlURL, encoding: String.Encoding.utf8.rawValue)
-        html = html.replacingOccurrences(of: "{NATIVE_PLATFORM}", with: "iOS")
-            .replacingOccurrences(of: "//{NATIVE_TEMPLATE}", with: "") as NSString
         webView.loadHTMLString(html as String, baseURL: htmlURL.deletingLastPathComponent())
     }
     
-    fileprivate func setupComponents() {
-        cover = ELEditorCover(jsAccessor: "Enclave.cover",
-                              jsId: "cover",
-                              webView: webView)
-        titleField = ELEditorField(jsAccessor: "Enclave.title",
-                                   jsId: "title",
-                                   webView: webView)
-        contentField = ELEditorField(jsAccessor: "Enclave.content",
-                                     jsId: "content",
-                                     webView: webView)
+    fileprivate func setupJavaScriptBridge() {
+        jsBridge = ELEditorViewJavaScriptBridge(webView: webView)
+        jsBridge?.delegate = delegate
+        delegate?.onDomLoadedCallback()
     }
-    
 }
 
 
 // MARK: - Public
-extension ELEditorView: ELEditorCoverProtocol {
+extension ELEditorView: ELEditorPublicProtocol {
     
-    /**
-     * 获取封面图
-     * @return 如果没有封面图时则返回null
-     */
     public func getCover() -> URL? {
-        return cover.getCover()
+        return jsBridge?.getCover()
     }
     
-    /**
-     * 更新封面图
-     * @param url 为nil时清除封面图
-     */
     public func updateCover(_ url: URL?) {
-        cover.updateCover(url)
+        jsBridge?.updateCover(url)
     }
     
-    /**
-     * 获取标题
-     */
-    public func getTitle() -> String {
-        return titleField.getValue()
+    public func getTitle() -> String? {
+        let title = jsBridge?.getTitle()
+        return title == nil || title!.isEmpty ? nil : title
     }
     
-    /**
-     * 设置标题
-     */
     public func setTitle(_ title: String) {
-        titleField.setValue(title)
+        jsBridge?.setTitle(title)
+    }
+    
+    public func setContent(_ content: String) {
+        jsBridge?.setContent(content)
+    }
+    
+    public func getContent() -> String? {
+        let content = jsBridge?.getContent()
+        return content == nil || content!.isEmpty ? nil : content
+    }
+    
+    public func focusTitle() {
+        jsBridge?.focusTitle()
+    }
+    
+    public func focusContent() {
+        jsBridge?.focusContent()
+    }
+    
+    public func isEmptyTitle() -> Bool {
+        return jsBridge?.isEmptyTitle() ?? true
+    }
+    
+    public func isEmptyContent() -> Bool {
+        return jsBridge?.isEmptyContent() ?? true
     }
     
     /**
-     * 获取内容
+     结束输入法
      */
-    public func setContent(_ title: String) {
-        contentField.setValue(title)
+    public func endEditing() {
+        self.endEditing(true)
     }
     
-    /**
-     * 设置内容
-     */
-    public func getContent() -> String {
-        return contentField.getValue()
-    }
-    
-    /**
-     * 切换至夜间模式
-     */
-    public func switchToNightMode() {
-        _inputAccessoryView?.onThemeChange()
-        backgroundColor = ELEdtiorConfiguration.backgroundColor()
-        webView.backgroundColor = backgroundColor
-        webView.stringByEvaluatingJavaScript(from: "Enclave.switchToNightMode();")
-    }
-    
-    /**
-     * 切换至日间模式
-     */
-    public func switchToLightMode() {
-        _inputAccessoryView?.onThemeChange()
-        backgroundColor = ELEdtiorConfiguration.backgroundColor()
-        webView.backgroundColor = backgroundColor
-        webView.stringByEvaluatingJavaScript(from: "Enclave.switchToLightMode();")
-    }
-    
-    ///当离开页面时备份当前选区
     func backupRangeWhenDisappear() {
-        webView.stringByEvaluatingJavaScript(from: "Enclave.backupRange();")
-        webView.endEditing(true)
+        jsBridge?.backupRangeWhenDisappear()
     }
+    
+    public func insertImage(_ url: URL) {
+        jsBridge?.insertImage(url)
+    }
+    
+    public func insertAudio(_ url: URL, duration: TimeInterval) {
+        jsBridge?.insertAudio(url, duration: duration)
+    }
+    
+    public func switchToLightMode() {
+        jsBridge?.switchToLightMode()
+        backgroundColor = ELEdtiorConfiguration.backgroundColor()
+        superview?.backgroundColor = backgroundColor
+        webView.backgroundColor = backgroundColor
+    }
+    
+    public func switchToNightMode() {
+        jsBridge?.switchToNightMode()
+        backgroundColor = ELEdtiorConfiguration.backgroundColor()
+        superview?.backgroundColor = backgroundColor
+        webView.backgroundColor = backgroundColor
+    }
+    
 }
 
 
@@ -162,7 +154,7 @@ extension ELEditorView {
     
     func addKeyboardObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShowOrHide(_:)), name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShowOrHide(_:)), name: .UIKeyboardWillHide, object: nil) 
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShowOrHide(_:)), name: .UIKeyboardWillHide, object: nil)
     }
     
     @objc func keyboardWillShowOrHide(_ notification: Notification) {
@@ -192,7 +184,8 @@ extension ELEditorView {
             //更新webView
             webView.scrollView.contentInset.bottom = isShow ? height : 0
         }
-        webView.stringByEvaluatingJavaScript(from: "native.contentHeight = \(contentHeight);")
+        //更新原生的内容高度到js层
+        webView.stringByEvaluatingJavaScript(from: "EnclaveEditor.nativeContentHeight = \(contentHeight);")
     }
 }
 
@@ -201,140 +194,13 @@ extension ELEditorView {
 extension ELEditorView: UIWebViewDelegate {
     
     public func webViewDidFinishLoad(_ webView: UIWebView) {
-        
+        setupJavaScriptBridge()
     }
     
     public func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        var shouldLoad = false
-        guard let url = request.url else {
-            return shouldLoad
+        if navigationType == .linkClicked { //编辑器内不允许链接点击跳转
+            return false
         }
-        if navigationType != .linkClicked {
-            shouldLoad = !handleWebViewCallback(url)
-        }
-        return shouldLoad
+        return true
     }
-    
-}
-
-
-// MARK: - Handling Callbacks
-extension ELEditorView {
-    
-    /// 处理js回调
-    fileprivate func handleWebViewCallback(_ url: URL) -> Bool {
-        var handled = false
-        guard let scheme = url.scheme else {
-            return handled
-        }
-        
-        switch scheme {
-        case "callback-dom-loaded":
-            handled = true
-            handleDOMLoadedCallback(url)
-        case "callback-log":
-            handled = true
-            handleLogCallback(url)
-        case "callback-cover-tap":
-            handled = true
-            handleCoverTappedCallback(url)
-        case "callback-field-valuechange":
-            handled = true
-            handleFieldValueChangeCallback(url)
-        case "callback-field-focus":
-            handled = true
-            handleFieldFocusCallback(url)
-        case "callback-field-deleteRecord":
-            handled = true
-            //handleFieldDeleteRecordCallback(url)
-        case "callback-field-playRecord":
-            handled = true
-            handleFieldPlayRecordCallback(url)
-        default:
-            handled = false
-        }
-        return handled
-    }
-    
-    /// DOM加载完成
-    private func handleDOMLoadedCallback(_ url: URL) {
-        cover.handleDOMLoaded()
-        titleField.handleDOMLoaded()
-        contentField.handleDOMLoaded()
-        if let delegate = delegate,
-            delegate.responds(to: #selector(ELEditorViewDelegate.editorViewDidFinishLoadingDOM(_:))) {
-            delegate.editorViewDidFinishLoadingDOM!(self)
-        }
-    }
-    
-    /// 日志输出
-    private func handleLogCallback(_ url: URL) {
-        let params = parseParameters(url)
-        var msg = params["msg"] ?? url.absoluteString
-        print("ELEdtior log: \(msg)")
-    }
-    
-    /// 封面图点击
-    private func handleCoverTappedCallback(_ url: URL) {
-        let params = parseParameters(url)
-        var url: URL?
-        if let urlString = params["url"] {
-            url = URL(string: urlString)
-        }
-        internalDelegate?.editorView(self, coverTappedWith: url)
-    }
-    
-    /// 字段内容改变
-    private func handleFieldValueChangeCallback(_ url: URL) {
-        let params = parseParameters(url)
-        if let id = params["id"] {
-            if id == titleField.jsId, let delegate = delegate,
-                delegate.responds(to: #selector(ELEditorViewDelegate.editorViewTitleDidChange(_:))) {
-                delegate.editorViewTitleDidChange!(self)
-            }
-            else if id == contentField.jsId, let delegate = delegate,
-                delegate.responds(to: #selector(ELEditorViewDelegate.editorViewContentDidChange(_:))) {
-                delegate.editorViewContentDidChange!(self)
-            }
-        }
-    }
-    
-    //字段获取输入焦点
-    private func handleFieldFocusCallback(_ url: URL) {
-        let params = parseParameters(url)
-        if let id = params["id"] {
-            _inputAccessoryView?.isEnableItem = id == contentField.jsId
-        }
-    }
-    
-    //正文中的音频开始播放
-    private func handleFieldPlayRecordCallback(_ url: URL) {
-        let params = parseParameters(url)
-        if let id = params["id"] {
-            
-        }
-    }
-    
-    
-    /// 转换参数
-    ///
-    /// - Parameter url: js端传过来的url
-    /// - Returns: 参数字典
-    func parseParameters(_ url: URL) -> [String: String] {
-        var returnParameters: [String: String] = [:]
-        guard let parameters = (url as! NSURL).resourceSpecifier?.removingPercentEncoding?.components(separatedBy: "~") else {
-            return returnParameters
-        }
-        
-        for parameter in parameters {
-            let signleParameter = parameter.components(separatedBy: "=")
-            if let name = signleParameter.first,
-                let value = signleParameter.last,
-                name != value {
-                returnParameters[name] = value
-            }
-        }
-        return returnParameters
-    }
-    
 }

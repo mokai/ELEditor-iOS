@@ -11,7 +11,7 @@ import AVFoundation
 ///编辑器录音页回调
 public protocol ELEditorRecordDelegate: NSObjectProtocol {
     
-    func editorDidRecord(url: URL, duration: TimeInterval)
+    func editorDidRecord(url: URL, duration: TimeInterval) -> Bool
     
 }
 
@@ -69,8 +69,8 @@ open class ELEditorRecordViewController: UIViewController {
         }
         
         playButton = UIButton(type: .custom)
-        playButton.setImage(UIImage.el_image(named: "record_play"), for: .normal)
-        playButton.setImage(UIImage.el_image(named: "record_pasue"), for: .selected)
+        playButton.setImage(UIImage.el_image(named: "audio_play"), for: .normal)
+        playButton.setImage(UIImage.el_image(named: "audio_pause"), for: .selected)
         playButton.addTarget(self, action: #selector(onPlayTap(_:)), for: .touchUpInside)
         view.addSubview(playButton)
         playButton.snp.makeConstraints { [weak self] (mk) in
@@ -95,8 +95,11 @@ open class ELEditorRecordViewController: UIViewController {
     }
     
     @objc func onNextTap() {
-        if let data = stopRecord() {
-            delegate?.editorDidRecord(url: data.url, duration: data.duration)
+        if let data = stopRecord(),
+            let delegate = delegate {
+            if delegate.editorDidRecord(url: data.url, duration: data.duration) {
+                return
+            }
         }
         navigationController?.popViewController(animated: true)
     }

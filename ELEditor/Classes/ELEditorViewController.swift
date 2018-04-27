@@ -10,8 +10,9 @@ open class ELEditorViewController: UIViewController {
      是否显示Toolbar，默认为false
      */
     open var showToolbarView = true
-    open var saveURL: URL!
     open private(set) var editorView: ELEditorView!
+    
+    open var delegate: ELEditorViewControllerDelegate?
     
     var _inputAccessoryView: ELInputAccessoryView?
     var _toolbarItems: [ELToolbarItem] = [
@@ -33,12 +34,11 @@ open class ELEditorViewController: UIViewController {
         setupEditorViewFrame()
     }
     
-    
     open func setup() {}
     
     fileprivate func setupEditorView() {
         editorView = ELEditorView(frame: self.view.frame)
-        editorView.internalDelegate = self
+        editorView.delegate = self
         view.addSubview(editorView)
     }
     
@@ -93,7 +93,7 @@ extension ELEditorViewController {
                 guard let wself = self else { return  }
                 //Copy到本地并插入到文中
                 if let localURL = ELEdtiorConfiguration.saveImage(image) {
-                    wself.editorView.contentField.insertImage(localURL)
+                    wself.editorView.insertImage(localURL)
                 }
             }
             imageSelector.extraActions = []
@@ -109,27 +109,52 @@ extension ELEditorViewController {
     }
 }
 
-//MARK: - Delegates
-extension ELEditorViewController: ELEditorViewInternalDelegate, ELEditorRecordDelegate {
+
+//MARK: - JS Callback
+extension ELEditorViewController: ELEditorViewJavaScriptBridgeDelegate {
     
-    //插入录音
-    public func editorDidRecord(url: URL, duration: TimeInterval) {
-        let durationFormat = ELEdtiorConfiguration.formatSecondsToString(duration)
-        editorView.contentField.insertRecord(url, duration: durationFormat)
+    func onDomLoadedCallback() {
+        delegate?.editorViewControllerDidFinishLoadingDOM?(self)
+    }
+    
+    func onAudioPlay() {
+        delegate?.editorViewControllerAudioOnPlay?(self)
+    }
+    
+    func onAudioResume() {
+        delegate?.editorViewControllerAudioOnPlay?(self)
+    }
+    
+    func onAudioDelete(dataId: String, url: URL) {
+        //音频删除
+        ELEdtiorConfiguration.delete(url)
+    }
+    
+    func onTitleFocus() {
+        _inputAccessoryView?.isEnableItem = false
+    }
+    
+    func onContentFocus() {
+        _inputAccessoryView?.isEnableItem = true
+    }
+
+    func onTitleChange(html: String) {
+        delegate?.editorViewController?(self, titleDidChange: html)
+    }
+    
+    func onContentChange(html: String) {
+        delegate?.editorViewController?(self, contentDidChange: html)
     }
     
     //封面图选择
-    public func editorView(_ editorView: ELEditorView, coverTappedWith url: URL?) {
+    func onCoverClick(url: URL?) {
         if let url = url {
             let deleteAction = UIAlertAction(title: "删除", style: .destructive, handler: { [weak self] (aciton) in
                 guard let wself = self else { return  }
                 //空字符则清空
                 wself.editorView.updateCover(nil)
                 ELEdtiorConfiguration.delete(url)
-                if let delegate = wself.editorView.delegate,
-                    delegate.responds(to: #selector(ELEditorViewDelegate.editorViewCoverDidChange(_:))) {
-                    delegate.editorViewCoverDidChange!(wself.editorView)
-                }
+                wself.delegate?.editorViewController?(wself, coverDidChange: nil)
             })
             imageSelector.extraActions = [deleteAction]
         } else {
@@ -144,14 +169,22 @@ extension ELEditorViewController: ELEditorViewInternalDelegate, ELEditorRecordDe
             //Copy到本地并插入到文中
             if let localURL = ELEdtiorConfiguration.saveImage(image) {
                 wself.editorView.updateCover(localURL)
-            }
-            
-            if let delegate = wself.editorView.delegate,
-                delegate.responds(to: #selector(ELEditorViewDelegate.editorViewCoverDidChange(_:))) {
-                delegate.editorViewCoverDidChange!(wself.editorView)
+                wself.delegate?.editorViewController?(wself, coverDidChange: localURL)
             }
         }
         imageSelector.isCompression = false
         imageSelector.show(editorView) //这里用self.view会有问题
     }
+
+}
+
+//MARK: - ELEditorRecordDelegate
+extension ELEditorViewController: ELEditorRecordDelegate {
+    
+    //插入录音
+    public func editorDidRecord(url: URL, duration: TimeInterval) -> Bool {
+        editorView.insertAudio(url, duration: duration)
+        return false
+    }
+    
 }

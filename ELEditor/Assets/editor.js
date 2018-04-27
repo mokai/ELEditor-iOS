@@ -1,38 +1,38 @@
-//MARK: - 飞地编辑器对象
-var Enclave = {};
-Enclave.margin = 25;
-Enclave.defaultCallbackSeparator = '~';
-Enclave.defaultHTML = "<p><br></p>";
+/**
+飞地移动两端编辑器
+v0.9 
+author kk@encalvelit.com
 
-//使用平台
-Enclave.isiOS = native.platform == "iOS";
-Enclave.isAndroid = native.platform == "Android";
+**/
 
-Enclave.isDebug = false;
+window.EnclaveEditor = {};
 
-// 交互原生
-Enclave.bridge;
+//MARK: - 配置项
+EnclaveEditor.nativeContentHeight; //原生
+
+
+EnclaveEditor.margin = 25;
+EnclaveEditor.defaultCallbackSeparator = '~';
+EnclaveEditor.defaultHTML = "<p><br></p>";
 
 // 组件对象
-Enclave.cover;
-Enclave.title;
-Enclave.content;
+EnclaveEditor.cover;
+EnclaveEditor.title;
+EnclaveEditor.content;
 
-Enclave.preSpanHeight = 0;
-Enclave.currentSelection = {
+EnclaveEditor.preSpanHeight = 0;
+EnclaveEditor.currentSelection = {
     'startContainer': 0,
     'startOffset': 0,
     'endContainer':  0,
     'endOffset': 0
 };
-Enclave.isEditingSelection = false
+EnclaveEditor.isEditingSelection = false;
 
 /*
  初始化
  */
-Enclave.init = function(bridge) {
-    this.bridge = bridge;
-    
+EnclaveEditor.init = function() {
     //组件
     this.cover = new ELCover($('#cover'));
     this.title = new ELField($('#title'));
@@ -43,63 +43,47 @@ Enclave.init = function(bridge) {
     
     var self = this;
     this.title.wrappedObject.bind('keydown', function(e) {
-                                  if (e.keyCode == 13) {
-                                  self.content.focus();
-                                  e.preventDefault();
-                                  }
+                                      if (e.keyCode == 13) {
+                                        self.content.focus();
+                                        e.preventDefault();
+                                      }
                                   });
     
     document.execCommand('defaultParagraphSeparator', false, 'p');
-    this.domLoadedCallback();
+    this.callback('onDomLoadedCallback');
 }
 
-Enclave.callback = function(callbackScheme, callbackPath) {
-    var callbackObject = null;
-    if(Enclave.isiOS) {
-        callbackObject = this.bridge;
+EnclaveEditor.callback = function(func) {
+    if (window.EnclaveBridge) {
+        EnclaveBridge['callback'].apply(EnclaveBridge, arguments);
     }
-    else if(Enclave.isAndroid) {
-        if (native.androidApiLevel < 17) {
-            callbackObject = this.bridge;
-        } else {
-            callbackObject = EnclaveNative;
-        }
-    }
-    callbackObject.callback(callbackScheme, callbackPath);
 }
 
-Enclave.log = function(msg) {
-    var logObject = null;
-    if(Enclave.isiOS) {
-        logObject = this.bridge;
-    }
-    else if(Enclave.isAndroid) {
-        logObject = console;
-    }
-    logObject.log(msg);
-}
-
-Enclave.domLoadedCallback = function() {
-    this.callback("callback-dom-loaded");
+EnclaveEditor.log = function(msg) {
+    EnclaveBridge.log(msg)
 }
 
 // MARK: - Selection
 document.addEventListener('selectionchange', function(e) {
-                          if (Enclave.isFocus()) {
-                          Enclave.backupRange();
-                          }
-                          //Enclave.onContentChanged(e);
-                          if(Enclave.isiOS) {
-                          if ((window.getSelection().toString().length <= 0 && Enclave.isFocus())){
-                          Enclave.calculateEditorHeightWithCaretPosition();
-                          }
-                          }
-                          })
+        if (EnclaveEditor.isFocus()) {
+            EnclaveEditor.backupRange();
+        }
+        //EnclaveEditor.onContentChanged(e);
+        if(EnclaveMobile.isiOS) {
+            if ((window.getSelection().toString().length <= 0 && EnclaveEditor.isFocus())){
+                EnclaveEditor.calculateEditorHeightWithCaretPosition();
+            }
+        }
+    })
 
 // 将编辑框滚动到正确的位置
-Enclave.calculateEditorHeightWithCaretPosition = function() {
+EnclaveEditor.calculateEditorHeightWithCaretPosition = function() {
     var scrollOffsetY = window.document.body.scrollTop;
-    var containerHeight = native.contentHeight * window.devicePixelRatio; //iOS原生传过来的是pt
+    var containerHeight = document.documentElement.clientHeight;
+    //使用原生非像素高度
+    if (this.nativeContentHeight) {
+        containerHeight = this.nativeContentHeight * window.devicePixelRatio; 
+    } 
     var currentSelectionY = this.getCaretYPosition();
     var newPosotion = window.pageYOffset;
     if (currentSelectionY - this.preSpanHeight < scrollOffsetY) {
@@ -116,7 +100,7 @@ Enclave.calculateEditorHeightWithCaretPosition = function() {
 
 // 获取当前光标的位置
 // 获取当前光标的位置
-Enclave.getCaretYPosition = function() {
+EnclaveEditor.getCaretYPosition = function() {
     if (this.isFocus()) {
         var selection = window.getSelection();
         
@@ -175,7 +159,7 @@ Enclave.getCaretYPosition = function() {
 }
 
 
-Enclave.getCoords = function(elem) {
+EnclaveEditor.getCoords = function(elem) {
     var box = elem.getBoundingClientRect();
     
     var body = document.body;
@@ -199,11 +183,11 @@ Enclave.getCoords = function(elem) {
 }
 
 
-Enclave.isFocus = function() {
+EnclaveEditor.isFocus = function() {
     return this.content.isFocus() || this.title.isFocus()
 }
 
-Enclave.currentFocusField = function() {
+EnclaveEditor.currentFocusField = function() {
     if (this.content.isFocus()) {
         return this.content;
     }
@@ -214,7 +198,7 @@ Enclave.currentFocusField = function() {
     }
 }
 
-Enclave.backupRange = function() {
+EnclaveEditor.backupRange = function() {
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
         var range = selection.getRangeAt(0);
@@ -227,7 +211,7 @@ Enclave.backupRange = function() {
     }
 }
 
-Enclave.restoreRange = function() {
+EnclaveEditor.restoreRange = function() {
     if (this.currentSelection.startContainer == 0) {
         return
     }
@@ -242,14 +226,14 @@ Enclave.restoreRange = function() {
 
 // MARK: - Utily
 // 生成空段落
-Enclave.generateEmptyPara = function(){
+EnclaveEditor.generateEmptyPara = function(){
     var template = document.createElement('template');
     template.innerHTML = this.defaultHTML;
     return template.content.firstChild;
 }
 
 //获取最外层的P标签
-Enclave.getParentPara = function(node) {
+EnclaveEditor.getParentPara = function(node) {
     var currentNode = node;
     while(currentNode != null && currentNode.nodeName.toLowerCase() != 'p') {
         currentNode = currentNode.parentNode;
@@ -258,7 +242,7 @@ Enclave.getParentPara = function(node) {
 }
 
 // 获取range最外层的前一个P标签，当range不为P标签的第一个sub node时返回range当前node，当无前一个P标签时返回null
-Enclave.getParentRreviousSiblingPara = function(range) {
+EnclaveEditor.getParentRreviousSiblingPara = function(range) {
     var currentNode = range.startContainer;
     if (range.startOffset > 0) {
         return currentNode;
@@ -277,7 +261,7 @@ Enclave.getParentRreviousSiblingPara = function(range) {
 }
 
 //插入
-Enclave.insertAfter = function(newElement,targetElement){
+EnclaveEditor.insertAfter = function(newElement,targetElement){
     if(targetElement.parentNode){
         var parent = targetElement.parentNode;
         if(targetElement.nextSibling){
@@ -288,7 +272,7 @@ Enclave.insertAfter = function(newElement,targetElement){
     }
 }
 
-Enclave.isSpecifiedTag = function(node, tagName) {
+EnclaveEditor.isSpecifiedTag = function(node, tagName) {
     if (!node) {
         return false;
     }
@@ -298,8 +282,7 @@ Enclave.isSpecifiedTag = function(node, tagName) {
     return node.nodeName.toLowerCase() == tagName;
 }
 
-
-Enclave.isInTag = function(node, targetTagName) {
+EnclaveEditor.isInTag = function(node, targetTagName) {
     // 判断光标是否在指定标签内并返回相应的node
     var result = null;
     if (typeof(node) == 'undefined') {
@@ -318,7 +301,7 @@ Enclave.isInTag = function(node, targetTagName) {
     }
     return result;
     function checkIf(node, targetTagName){
-        if (Enclave.isSpecifiedTag(node, targetTagName)) {
+        if (EnclaveEditor.isSpecifiedTag(node, targetTagName)) {
             // 坑：
             // 要从自己开始匹配，不能直接从parentElement开始匹配。
             // 例如当点击引用的时候，没输入内容之前取消引用，这个时候无法取消引用，因为传进来的note和targetTagName一样
@@ -328,10 +311,10 @@ Enclave.isInTag = function(node, targetTagName) {
             }
         } else {
             var p = node.parentNode;
-            while (p && (!Enclave.isSpecifiedTag(p, targetTagName) && !Enclave.isSpecifiedTag(p, 'body'))) {
+            while (p && (!EnclaveEditor.isSpecifiedTag(p, targetTagName) && !EnclaveEditor.isSpecifiedTag(p, 'body'))) {
                 p = p.parentElement
             }
-            if (Enclave.isSpecifiedTag(p, targetTagName)) {
+            if (EnclaveEditor.isSpecifiedTag(p, targetTagName)) {
                 return {
                     'is': true,
                     'tagNode': p
@@ -343,23 +326,17 @@ Enclave.isInTag = function(node, targetTagName) {
     }
 };
 
-Enclave.playRecord = function(url) {
-    var audio = new Audio(url)
-    audio.play()
-}
 
 // MARK: - 夜间模式
-
 //切换到夜间模式
-Enclave.switchToNightMode = function() {
-    document.querySelector('html').classList.add('night-mode')
+EnclaveEditor.switchToNightMode = function() {
+    EnclaveMobile.switchToNightMode();
 }
 
 //切换到白天模式
-Enclave.switchToLightMode = function() {
-    document.querySelector('html').classList.remove('night-mode')
+EnclaveEditor.switchToLightMode = function() {
+    EnclaveMobile.switchToLightMode();
 }
-
 
 // MARK: - 字段对象
 function ELField(wrappedObject) {
@@ -370,14 +347,11 @@ function ELField(wrappedObject) {
     
     //设置默认的html元素
     if (!this.hasNoStyle) {
-        this.setHTML(Enclave.defaultHTML);
+        this.setHTML(EnclaveEditor.defaultHTML);
     }
     this.bindEventListeners();
 }
 
-ELField.prototype.callbackId = function() {
-    return 'id=' + this.id;
-}
 
 ELField.prototype.wrappedDomNode = function() {
     return this.wrappedObject[0];
@@ -405,8 +379,7 @@ ELField.prototype.bindEventListeners = function() {
 }
 
 ELField.prototype.onFocus = function(e) {
-    var joinedArguments = this.callbackId()
-    Enclave.callback('callback-field-focus', joinedArguments);
+    EnclaveEditor.callback('onFocus', this.id);
 }
 
 ELField.prototype.onPaste = function(e) {
@@ -426,7 +399,7 @@ ELField.prototype.onPaste = function(e) {
         document.execCommand('insertText', false, plainText);
     } else {
         //TODO: insert image
-        //Enclave.callback("callback-paste");
+        //EnclaveEditor.callback("callback-paste");
     }
 }
 
@@ -436,7 +409,7 @@ ELField.prototype.onTap = function(e) {
     }
     
     //组件点击选择
-    var parentPara = Enclave.getParentPara(event.target);
+    var parentPara = EnclaveEditor.getParentPara(event.target);
     if (parentPara != null && parentPara.getAttribute('class') != null) {
         var target = event.target;
         var selection = window.getSelection();
@@ -453,7 +426,7 @@ ELField.prototype.onInput = function(e) {
             this.setHeading('p');
         } else {
             //iOS下中文联想会产生跳跃，所以在编辑器最末尾补一个空行
-            if(Enclave.isiOS) {
+            if(EnclaveMobile.isiOS) {
                 if (this.wrappedDomNode().lastChild) {
                     var lastChild = this.wrappedDomNode().lastChild;
                     if (lastChild.tagName && (lastChild.tagName.toLowerCase() == 'p')
@@ -462,7 +435,7 @@ ELField.prototype.onInput = function(e) {
                             || lastChild.innerHTML == '<br>'
                             || lastChild.innerHTML.length == 0)) {
                         } else {
-                            var newEmptyLine = Enclave.generateEmptyPara();
+                            var newEmptyLine = EnclaveEditor.generateEmptyPara();
                             this.wrappedDomNode().appendChild(newEmptyLine);
                         }
                 }
@@ -470,20 +443,7 @@ ELField.prototype.onInput = function(e) {
         }
     }
     
-    //字段内容改变回调
-    if(this.getHTML() != this.lastHTML) {
-        this.lastHTML = this.getHTML();
-        var joinedArguments = this.callbackId();
-        //Android直接回调更改内容
-        if(Enclave.isAndroid) {
-            var valueArgument = "value=" + this.lastHTML;
-            joinedArguments = joinedArguments + Enclave.defaultCallbackSeparator +
-            valueArgument;
-        }
-        Enclave.callback('callback-field-valuechange', joinedArguments);
-    }
-    
-    this.refreshPlaceholder();
+    this.onValueChange();
 }
 
 
@@ -498,7 +458,7 @@ ELField.prototype.onKeydown = function(e) {
             var range = getSelection().getRangeAt(0);
             var startContainer = range.startContainer;
             
-            var parentPreviousSibling = Enclave.getParentRreviousSiblingPara(range);
+            var parentPreviousSibling = EnclaveEditor.getParentRreviousSiblingPara(range);
             if (startContainer.nodeName.toLowerCase() == 'p'
                 && startContainer.getAttribute('class') != null) {
                 if (parentPreviousSibling == null) {
@@ -541,6 +501,16 @@ ELField.prototype.setHeading = function(heading) {
     }
 }
 
+//字段内容改变
+ELField.prototype.onValueChange = function(e) {
+    var currentHtml = this.getHTML();
+    if(currentHtml != this.lastHTML) {
+        this.lastHTML = currentHtml;
+        EnclaveEditor.callback('onValueChange', this.id, this.lastHTML);
+    }
+    this.refreshPlaceholder();
+}
+
 
 // MARK: - Focus
 ELField.prototype.isFocus = function() {
@@ -575,9 +545,9 @@ ELField.prototype.getHTML = function() {
     //替换&nbsp;成空格
     html = html.replace(/&nbsp;/, " ");
     
-    if(Enclave.isiOS) {
+    if(EnclaveMobile.isiOS) {
         //清除编辑器最末尾补的一个空行
-        html = html.replace(new RegExp(Enclave.defaultHTML + '$'), '')
+        html = html.replace(new RegExp(EnclaveEditor.defaultHTML + '$'), '')
     }
     return html;
 }
@@ -590,9 +560,9 @@ ELField.prototype.getHTMLForCallback = function() {
         value = encodeURIComponent(value);
     }
     var valueArgument = "value=" + value;
-    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
+    var joinedArguments = this.callbackId() + EnclaveEditor.defaultCallbackSeparator +
     valueArgument;
-    Enclave.callback('callback-field-getvalue', joinedArguments);
+    EnclaveEditor.callback('callback-field-getvalue', joinedArguments);
 }
 
 
@@ -630,7 +600,7 @@ ELField.prototype.setPlaceholder = function(placeholder) {
 ELField.prototype.refreshPlaceholder = function() {
     //当前字段有样式，且不为默认html时
     //不为空时
-    if(!this.hasNoStyle && this.lastHTML != Enclave.defaultHTML || !this.isEmpty()) {
+    if(!this.hasNoStyle && this.lastHTML != EnclaveEditor.defaultHTML || !this.isEmpty()) {
         this.wrappedObject.removeClass('placeholder');
     } else {
         this.wrappedObject.addClass('placeholder');
@@ -655,13 +625,13 @@ ELField.prototype.insertImage = function(img) {
     function findImageNextSibling(imgItem){
         var tempDom = document.createElement('div');
         tempDom.innerHTML = imgItem.parentNode.innerHTML;
-        var target = tempDom.querySelector('.el_img').nextSibling;
+        var target = tempDom.querySelector('.el-img').nextSibling;
         return target;
     }
     function findImagePrevSibling(imgItem){
         var tempDom = document.createElement('div');
         tempDom.innerHTML = imgItem.parentNode.innerHTML;
-        var target = tempDom.querySelector('.el_img').previousSibling;
+        var target = tempDom.querySelector('.el-img').previousSibling;
         return target;
     }
     function resetImageParentNodeHTML(imgItem){
@@ -670,14 +640,15 @@ ELField.prototype.insertImage = function(img) {
         tempDom.innerHTML = pnode.innerHTML;
         pnode.innerHTML = tempDom.innerHTML;
     }
-    var imgItem = document.createElement('p')
-    imgItem.setAttribute('data-id', img);
-    imgItem.className = "img-container"
-    imgItem.innerHTML = '<img src="'+img+'" class="el_img"/>';
+    var dataId = new Date().getTime().toString();
+    var imgItem = document.createElement('p');
+    imgItem.setAttribute('data-id', dataId);
+    imgItem.className = "el-img"
+    imgItem.innerHTML = '<img src="'+img+'" />';
     
     var self = this;
     function _inner() {
-        Enclave.restoreRange();
+        EnclaveEditor.restoreRange();
         var selection = window.getSelection(),
         range;
         
@@ -685,19 +656,19 @@ ELField.prototype.insertImage = function(img) {
             range = selection.getRangeAt(0);
         } else {
             range = document.createRange();
-            if(Enclave.currentSelection.startContainer == 0 || Enclave.currentSelection.endContainer == 0){
-                range.setStart(Enclave.content.wrappedDomNode(), Enclave.currentSelection.startOffset);
-                range.setEnd(Enclave.content.wrappedDomNode(), Enclave.currentSelection.endOffset);
+            if(EnclaveEditor.currentSelection.startContainer == 0 || EnclaveEditor.currentSelection.endContainer == 0){
+                range.setStart(EnclaveEditor.content.wrappedDomNode(), EnclaveEditor.currentSelection.startOffset);
+                range.setEnd(EnclaveEditor.content.wrappedDomNode(), EnclaveEditor.currentSelection.endOffset);
             }else{
-                range.setStart(Enclave.currentSelection.startContainer, Enclave.currentSelection.startOffset);
-                range.setEnd(Enclave.currentSelection.endContainer, Enclave.currentSelection.endOffset);
+                range.setStart(EnclaveEditor.currentSelection.startContainer, EnclaveEditor.currentSelection.startOffset);
+                range.setEnd(EnclaveEditor.currentSelection.endContainer, EnclaveEditor.currentSelection.endOffset);
             }
         }
         var rangeNode = range.endContainer; // 光标所在的node
         
-        if (Enclave.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote'])){
+        if (EnclaveEditor.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote'])){
             // 列表和引用内不插书籍,/把书籍看成一个独立的段落处理
-            var inTagNode = Enclave.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote']).tagNode;
+            var inTagNode = EnclaveEditor.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote']).tagNode;
             imgItem.removeAttribute('data-id');
             if (inTagNode.textContent.length == 0) {
                 // 如果当前block没有文本，则把block删掉
@@ -707,14 +678,14 @@ ELField.prototype.insertImage = function(img) {
                 }
                 inTagNode.remove();
             } else {
-                Enclave.insertAfter(imgItem, inTagNode);
+                EnclaveEditor.insertAfter(imgItem, inTagNode);
             }
             if (imgItem.nextSibling) {
                 range.selectNodeContents(imgItem.nextSibling);
                 range.collapse();
             } else {
-                var newEmptyLine = Enclave.generateEmptyPara();
-                Enclave.insertAfter(newEmptyLine, imgItem);
+                var newEmptyLine = EnclaveEditor.generateEmptyPara();
+                EnclaveEditor.insertAfter(newEmptyLine, imgItem);
                 range.selectNodeContents(newEmptyLine);
                 range.collapse(false);
             }
@@ -729,7 +700,7 @@ ELField.prototype.insertImage = function(img) {
             theImgItemPreviousSibling = null || theImgItem.previousSibling,
             theImgItemNextSibling = null || theImgItem.nextSibling;
             theImgItem.removeAttribute('data-id');
-            if(imgItemParentNode == Enclave.content.wrappedDomNode()){
+            if(imgItemParentNode == EnclaveEditor.content.wrappedDomNode()){
                 // 这是在第一行没被p包住的情况
                 // 图片前面包一个p
                 if(theImgItemPreviousSibling){
@@ -751,15 +722,15 @@ ELField.prototype.insertImage = function(img) {
                         range.collapse();
                     }
                 }else{
-                    var emptyLine = Enclave.generateEmptyPara();
-                    Enclave.insertAfter(emptyLine, theImgItem);
+                    var emptyLine = EnclaveEditor.generateEmptyPara();
+                    EnclaveEditor.insertAfter(emptyLine, theImgItem);
                     range.selectNodeContents(emptyLine);
                     range.collapse(false);
                 }
             }else{
                 // 这是在一个段落里面的
                 // 先把图片挪到parent外面
-                Enclave.insertAfter(theImgItem, imgItemParentNode);
+                EnclaveEditor.insertAfter(theImgItem, imgItemParentNode);
                 // 如果原来有nextSibling，则把图片原来的nextSibling包一个p并插到图片后面
                 if(theImgItemNextSibling && !(theImgItemNextSibling.nodeType == 1 && theImgItemNextSibling.tagName.toLowerCase() == "br")){
                     var newNextPara;
@@ -770,7 +741,7 @@ ELField.prototype.insertImage = function(img) {
                     }else{
                         newNextPara = theImgItemNextSibling;
                     }
-                    Enclave.insertAfter(newNextPara, theImgItem);
+                    EnclaveEditor.insertAfter(newNextPara, theImgItem);
                 }
                 if((imgItemParentNode.childNodes.length == 0) || (imgItemParentNode.innerHTML == '<br>') || (imgItemParentNode.innerText == '')){
                     // 书和next移除出来后parent空了，移除掉
@@ -780,26 +751,26 @@ ELField.prototype.insertImage = function(img) {
                     // 处理完之后重新那img的next并做相应处理
                     range.selectNodeContents(theImgItem.nextSibling);
                 }else{
-                    var newEmptyLine = Enclave.generateEmptyPara();
-                    Enclave.insertAfter(newEmptyLine, theImgItem);
+                    var newEmptyLine = EnclaveEditor.generateEmptyPara();
+                    EnclaveEditor.insertAfter(newEmptyLine, theImgItem);
                     range.selectNodeContents(newEmptyLine);
                 }
             }
         }
         
         
-        Enclave.backupRange();
+        EnclaveEditor.backupRange();
         selection.removeAllRanges();
         selection.addRange(range);
         selection.collapseToStart();
         
         self.refreshPlaceholder();
         setTimeout(function(){
-                   Enclave.calculateEditorHeightWithCaretPosition();
+                   EnclaveEditor.calculateEditorHeightWithCaretPosition();
                    },50);
     }
     //适配iOS
-    if (Enclave.isiOS) {
+    if (EnclaveMobile.isiOS) {
         // hack for timing
         setTimeout(function(){
                    _inner();
@@ -809,8 +780,8 @@ ELField.prototype.insertImage = function(img) {
     }
 }
 
-//插入录音
-ELField.prototype.insertRecord = function(url, duration) {
+//插入音频
+ELField.prototype.insertAudio = function(url, duration) {
     function generateSpaceNode(){
         var n = document.createTextNode('\u200D');
         return n;
@@ -827,33 +798,36 @@ ELField.prototype.insertRecord = function(url, duration) {
     // AB,C,D,E
     // A,B,C,D,E
     // 这样如果我在ABCDE前面插入img，img的nextSibling有可能只拿到A而拿不到整个文字node，不符合预期
-    function findRecordNextSibling(recordItem){
+    function findAudioNextSibling(audioItem){
         var tempDom = document.createElement('div');
-        tempDom.innerHTML = recordItem.parentNode.innerHTML;
-        var target = tempDom.querySelector('.record-container').nextSibling;
+        tempDom.innerHTML = audioItem.parentNode.innerHTML;
+        var target = tempDom.querySelector('.el-audio').nextSibling;
         return target;
     }
-    function findRecordPrevSibling(recordItem){
+    function findAudioPrevSibling(audioItem){
         var tempDom = document.createElement('div');
-        tempDom.innerHTML = recordItem.parentNode.innerHTML;
-        var target = tempDom.querySelector('.record-container').previousSibling;
+        tempDom.innerHTML = audioItem.parentNode.innerHTML;
+        var target = tempDom.querySelector('.el-audio').previousSibling;
         return target;
     }
-    function resetRecordItemParentNodeHtml(recordItem){
-        var pnode = recordItem.parentNode,
+    function resetAudioItemParentNodeHtml(audioItem){
+        var pnode = audioItem.parentNode,
         tempDom = document.createElement('div');
         tempDom.innerHTML = pnode.innerHTML;
         pnode.innerHTML = tempDom.innerHTML;
     }
-    
-    var recordItem = document.createElement('p');
-    recordItem.className = 'record-container';
-    recordItem.setAttribute('contenteditable', false);
-    recordItem.setAttribute('data-id', url);
-    recordItem.setAttribute('data-url', url);
-    recordItem.innerHTML = "<img class='record-play' src='record_play.png' onclick='Enclave.content.onPlayRecord(event)' >"
-    +"<span class='record-duration'>"+duration+"</span>"
-    +"<img class='record-delete' src='record_delete.png' onclick='Enclave.content.onDeleteRecord(event)'>";
+
+    var dataId = new Date().getTime().toString();
+    var audioItem = document.createElement('p');
+    audioItem.className = 'el-audio';
+    audioItem.setAttribute('contenteditable', false);
+    audioItem.setAttribute('data-id', dataId);
+    audioItem.setAttribute('data-url', url);
+    audioItem.setAttribute('data-duration', duration + '');
+    audioItem.setAttribute('data-original-url', url);
+    audioItem.innerHTML = "<img class='el-audio-play' src='audio_play.png' onclick='EnclaveAudio.onPlay(event)' >"
+    +"<span class='el-audio-duration'>" + EnclaveAudio.formatDurationToFriendly(duration) + "</span>"
+    +"<img class='el-audio-delete' src='audio_delete.png' onclick='EnclaveAudio.onDelete(event)'>";
     
     var self = this;
     function _inner() {
@@ -864,113 +838,113 @@ ELField.prototype.insertRecord = function(url, duration) {
             range = selection.getRangeAt(0);
         } else {
             range = document.createRange();
-            if(Enclave.currentSelection.startContainer == 0 || Enclave.currentSelection.endContainer == 0){
-                range.setStart(Enclave.content.wrappedDomNode(), Enclave.currentSelection.startOffset);
-                range.setEnd(Enclave.content.wrappedDomNode(), Enclave.currentSelection.endOffset);
+            if(EnclaveEditor.currentSelection.startContainer == 0 || EnclaveEditor.currentSelection.endContainer == 0){
+                range.setStart(EnclaveEditor.content.wrappedDomNode(), EnclaveEditor.currentSelection.startOffset);
+                range.setEnd(EnclaveEditor.content.wrappedDomNode(), EnclaveEditor.currentSelection.endOffset);
             }else{
-                range.setStart(Enclave.currentSelection.startContainer, Enclave.currentSelection.startOffset);
-                range.setEnd(Enclave.currentSelection.endContainer, Enclave.currentSelection.endOffset);
+                range.setStart(EnclaveEditor.currentSelection.startContainer, EnclaveEditor.currentSelection.startOffset);
+                range.setEnd(EnclaveEditor.currentSelection.endContainer, EnclaveEditor.currentSelection.endOffset);
             }
         }
         var rangeNode = range.endContainer; // 光标所在的node
         
-        if (Enclave.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote'])){
+        if (EnclaveEditor.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote'])){
             // 列表和引用内不插书籍,把书籍看成一个独立的段落处理
-            var inTagNode = Enclave.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote']).tagNode;
-            recordItem.removeAttribute('data-id');
+            var inTagNode = EnclaveEditor.isInTag(rangeNode, ['b', 'h1' ,'h2' ,'ul' ,'blockquote']).tagNode;
+            audioItem.removeAttribute('data-id');
             if (inTagNode.textContent.length == 0) {
                 // 如果当前block没有文本，则把block删掉
-                inTagNode.parentNode.insertBefore(recordItem, inTagNode);
-                if (recordItem.previousSibling.getAttribute('contenteditable') == 'false') {
-                    recordItem.parentNode.insertBefore(generateSpaceNode(), recordItem);
+                inTagNode.parentNode.insertBefore(audioItem, inTagNode);
+                if (audioItem.previousSibling.getAttribute('contenteditable') == 'false') {
+                    audioItem.parentNode.insertBefore(generateSpaceNode(), audioItem);
                 }
                 inTagNode.remove();
             } else {
-                Enclave.insertAfter(recordItem, inTagNode);
+                EnclaveEditor.insertAfter(audioItem, inTagNode);
             }
-            if (recordItem.nextSibling) {
-                range.selectNodeContents(recordItem.nextSibling);
+            if (audioItem.nextSibling) {
+                range.selectNodeContents(audioItem.nextSibling);
                 range.collapse();
             } else {
-                var newEmptyLine = Enclave.generateEmptyPara();
-                Enclave.insertAfter(newEmptyLine, recordItem);
+                var newEmptyLine = EnclaveEditor.generateEmptyPara();
+                EnclaveEditor.insertAfter(newEmptyLine, audioItem);
                 range.selectNodeContents(newEmptyLine);
                 range.collapse(false);
             }
         }else{
             // 在第一行或者在一个p里，这里把图片和图片前后的node包个p
             range.collapse(false);
-            range.insertNode(recordItem);
-            var flagId = recordItem.getAttribute('data-id'),
-            recordItemParentNode = recordItem.parentNode;
-            resetRecordItemParentNodeHtml(recordItem);
-            var theRecordItem = recordItemParentNode.querySelector('[data-id="'+flagId+'"]'),
-            theRecordItemPreviousSibling = null || theRecordItem.previousSibling,
-            theRecordItemNextSibling = null || theRecordItem.nextSibling;
-            theRecordItem.removeAttribute('data-id');
-            if(recordItemParentNode == Enclave.content.wrappedDomNode()){
+            range.insertNode(audioItem);
+            var flagId = audioItem.getAttribute('data-id'),
+            audioItemParentNode = audioItem.parentNode;
+            resetAudioItemParentNodeHtml(audioItem);
+            var theAudioItem = audioItemParentNode.querySelector('[data-id="'+flagId+'"]'),
+            theAudioItemPreviousSibling = null || theAudioItem.previousSibling,
+            theAudioItemNextSibling = null || theAudioItem.nextSibling;
+            //theAudioItem.removeAttribute('data-id');
+            if(audioItemParentNode == EnclaveEditor.content.wrappedDomNode()){
                 // 这是在第一行没被p包住的情况
                 // 图片前面包一个p
-                if(theRecordItemPreviousSibling){
-                    if((theRecordItemPreviousSibling.nodeType == 3 ) || (theRecordItemPreviousSibling.nodeType == 1 && theRecordItemPreviousSibling.tagName.toLowerCase() == "br")){
+                if(theAudioItemPreviousSibling){
+                    if((theAudioItemPreviousSibling.nodeType == 3 ) || (theAudioItemPreviousSibling.nodeType == 1 && theAudioItemPreviousSibling.tagName.toLowerCase() == "br")){
                         var newPreviousPara = document.createElement('p');
-                        range.selectNodeContents(theRecordItemPreviousSibling);
+                        range.selectNodeContents(theAudioItemPreviousSibling);
                         range.surroundContents(newPreviousPara);
                     }
                 }else{
-                    theRecordItem.parentNode.insertBefore(generateSpaceNode(), theRecordItem);
+                    theAudioItem.parentNode.insertBefore(generateSpaceNode(), theAudioItem);
                 }
                 // 图片后面包一个p
-                if(theRecordItemNextSibling){
-                    if((theRecordItemNextSibling.nodeType == 3 ) || (theRecordItemNextSibling.nodeType == 1 && theRecordItemNextSibling.tagName.toLowerCase() == "br")){
+                if(theAudioItemNextSibling){
+                    if((theAudioItemNextSibling.nodeType == 3 ) || (theAudioItemNextSibling.nodeType == 1 && theAudioItemNextSibling.tagName.toLowerCase() == "br")){
                         var newNextPara = document.createElement('p');
-                        range.selectNodeContents(theRecordItemNextSibling);
+                        range.selectNodeContents(theAudioItemNextSibling);
                         range.surroundContents(newNextPara);
                         range.selectNodeContents(newNextPara);
                     }else{
-                        range.selectNodeContents(theRecordItemNextSibling);
+                        range.selectNodeContents(theAudioItemNextSibling);
                         range.collapse();
                     }
                 }else{
-                    var newEmptyLine = Enclave.generateEmptyPara();
-                    Enclave.insertAfter(newEmptyLine, theRecordItem);
+                    var newEmptyLine = EnclaveEditor.generateEmptyPara();
+                    EnclaveEditor.insertAfter(newEmptyLine, theAudioItem);
                     range.selectNodeContents(newEmptyLine);
                     range.collapse(false);
                 }
-            }else{
+            } else {
                 // 这是在一个段落里面的
                 // 先把图片挪到parent外面
-                Enclave.insertAfter(theRecordItem, recordItemParentNode);
+                EnclaveEditor.insertAfter(theAudioItem, audioItemParentNode);
                 // 如果原来有nextSibling，则把图片原来的nextSibling包一个p并插到图片后面
-                if(theRecordItemNextSibling && !(theRecordItemNextSibling.nodeType == 1 && theRecordItemNextSibling.tagName.toLowerCase() == "br")){
+                if(theAudioItemNextSibling && !(theAudioItemNextSibling.nodeType == 1 && theAudioItemNextSibling.tagName.toLowerCase() == "br")){
                     var newNextPara;
-                    if((theRecordItemNextSibling.nodeType == 3 ) || (theRecordItemNextSibling.nodeType == 1 && theRecordItemNextSibling.tagName.toLowerCase() == "br")){
+                    if((theAudioItemNextSibling.nodeType == 3 ) || (theAudioItemNextSibling.nodeType == 1 && theAudioItemNextSibling.tagName.toLowerCase() == "br")){
                         newNextPara = document.createElement('p');
-                        range.selectNodeContents(theRecordItemNextSibling);
+                        range.selectNodeContents(theAudioItemNextSibling);
                         range.surroundContents(newNextPara);
                     }else{
-                        newNextPara = theRecordItemNextSibling;
+                        newNextPara = theAudioItemNextSibling;
                     }
-                    Enclave.insertAfter(newNextPara, theRecordItem);
+                    EnclaveEditor.insertAfter(newNextPara, theAudioItem);
                 }
-                if((recordItemParentNode.childNodes.length == 0) || (recordItemParentNode.innerHTML == '<br>') || (recordItemParentNode.innerText == '')){
+                if((audioItemParentNode.childNodes.length == 0) || (audioItemParentNode.innerHTML == '<br>') || (audioItemParentNode.innerText == '')){
                     // 书和next移除出来后parent空了，移除掉
-                    recordItemParentNode.parentNode.removeChild(recordItemParentNode);
+                    audioItemParentNode.parentNode.removeChild(audioItemParentNode);
                 }
-                if(theRecordItem.nextSibling){
-                    range.selectNodeContents(theRecordItem.nextSibling);
+                if(theAudioItem.nextSibling){
+                    range.selectNodeContents(theAudioItem.nextSibling);
                 }else{
-                    var newEmptyLine = Enclave.generateEmptyPara();
-                    Enclave.insertAfter(newEmptyLine, theRecordItem);
+                    var newEmptyLine = EnclaveEditor.generateEmptyPara();
+                    EnclaveEditor.insertAfter(newEmptyLine, theAudioItem);
                     range.selectNodeContents(newEmptyLine);
                 }
-                if(!theRecordItem.previousSibling || (theRecordItem.previousSibling.getAttribute('contenteditable') == 'false')){
-                    theRecordItem.parentNode.insertBefore(generateSpaceNode(), theRecordItem);
+                if(!theAudioItem.previousSibling || (theAudioItem.previousSibling.getAttribute('contenteditable') == 'false')){
+                    theAudioItem.parentNode.insertBefore(generateSpaceNode(), theAudioItem);
                 }
             }
         }
         
-        Enclave.backupRange();
+        EnclaveEditor.backupRange();
         selection.removeAllRanges();
         selection.addRange(range);
         selection.collapseToStart();
@@ -978,11 +952,11 @@ ELField.prototype.insertRecord = function(url, duration) {
         //判断placeholder
         self.refreshPlaceholder();
         setTimeout(function(){
-                   Enclave.calculateEditorHeightWithCaretPosition();
+                   EnclaveEditor.calculateEditorHeightWithCaretPosition();
                    },50);
     }
     //适配iOS
-    if (Enclave.isiOS) {
+    if (EnclaveMobile.isiOS) {
         // hack for timing
         setTimeout(function(){
                    _inner();
@@ -992,37 +966,6 @@ ELField.prototype.insertRecord = function(url, duration) {
     }
 }
 
-
-ELField.prototype.onDeleteRecord = function(event) {
-    if (this.hasNoStyle) {
-        return;
-    }
-    event.stopPropagation();
-    var target = event.target;
-    var dataURL = target.parentNode.getAttribute('data-url');
-    target.parentNode.remove();
-    var valueArgument = "value=" + dataURL;
-    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
-    valueArgument;
-    Enclave.callback('callback-field-deleteRecord', joinedArguments);
-}
-
-ELField.prototype.onPlayRecord = function(event) {
-    console.log('onPlayRecord');
-    if (this.hasNoStyle) {
-        return;
-    }
-    event.stopPropagation();
-    var target = event.target;
-    
-    var dataURL = target.parentNode.getAttribute('data-url');
-    var valueArgument = "value=" + dataURL;
-    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
-    valueArgument;
-    Enclave.callback('callback-field-playRecord', joinedArguments);
-    
-    Enclave.playRecord(dataURL);
-}
 
 // MARK: - 封面图对象
 function ELCover(wrappedObject) {
@@ -1044,10 +987,6 @@ function ELCover(wrappedObject) {
     //设置icon的宽度
     var width = this.wrappedObject.css('width');
     this.wrappedIconObject.css('width', width);
-}
-
-ELCover.prototype.callbackId = function() {
-    return 'id=' + this.id;
 }
 
 // 清除封面图
@@ -1087,9 +1026,9 @@ ELCover.prototype.getCoverForCallback = function() {
         value = encodeURIComponent(value);
     }
     var valueArgument = "value=" + value;
-    var joinedArguments = this.callbackId() + Enclave.defaultCallbackSeparator +
+    var joinedArguments = this.callbackId() + EnclaveEditor.defaultCallbackSeparator +
     valueArgument;
-    Enclave.callback('callback-field-getvalue', joinedArguments);
+    EnclaveEditor.callback('callback-field-getvalue', joinedArguments);
 }
 
 //封面图加载成功，垂直居中处理
@@ -1107,10 +1046,8 @@ ELCover.prototype.onLoad = function() {
 ELCover.prototype.onClick = function(event) {
     event.preventDefault();
     var url = this.getCover();
-    var arguments = ['url=' + encodeURIComponent(url)];
-    var joinedArguments = arguments.join(Enclave.defaultCallbackSeparator);
-    Enclave.callback('callback-cover-tap', joinedArguments);
+    EnclaveEditor.callback('onCoverClick', url);
 }
 
 //MARK: Start
-Enclave.init(new EnclaveBridge());
+EnclaveEditor.init();

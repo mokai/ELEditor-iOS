@@ -9,7 +9,6 @@ import UIKit
 
 open class ELWebView: UIWebView {
 
-    
     override open func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         return false
     }

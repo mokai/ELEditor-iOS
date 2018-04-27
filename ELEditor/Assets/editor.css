@@ -89,46 +89,15 @@ body {
 }
 
 /*图片*/
-#content .img-container {
+#content .el-img {
     margin-top: 0.6rem;
     margin-left: 0;
     margin-right: 0;
 }
 
-#content .img-container img {
+#content .el-img img {
     width: 100%;
     display: block;
-}
-
-/*录音*/
-#content .record-container {
-    height: 1.18rem;
-    border-radius: 0.08rem;
-    border: 0.02rem solid #E4E4E4;
-}
-#content .record-play {
-    width:0.56rem;
-    height:0.56rem;
-    display: inline;
-    margin-left: 0.32rem;
-    margin-top: 0.32rem;
-    float: left;
-}
-#content .record-duration {
-    font-size:0.28rem;
-    color:rgba(99,99,99,1);
-    margin-left:0.26rem;
-    margin-top:0.4rem;
-    line-height:0.4rem;
-    display: inline-block;
-}
-#content .record-delete {
-    width:0.48rem;
-    height:0.48rem;
-    display: inline;
-    margin-top: 0.36rem;
-    float: right;
-    margin-right: 0.32rem;
 }
 
 /*#MARK: - 夜间模式*/
@@ -141,6 +110,3 @@ body {
 }
 .night-mode #separator { background-color: #717073; }
 .night-mode #cover { background-color: #414141; }
-.night-mode #content .record-container {
-    border-color: #515151;
-}
